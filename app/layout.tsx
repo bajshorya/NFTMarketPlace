@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import Footer from "@/components/Footer";
+import NavbarDemo from "@/components/Navbar";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -25,9 +27,16 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} min-h-screen flex flex-col`}
+        suppressHydrationWarning // Add this to ignore hydration mismatches on body
       >
-        {children}
+        <NavbarDemo />
+        <main className="flex-1 pt-5">
+          {" "}
+          {/* Keep this padding to match navbar height */}
+          {children}
+        </main>
+        <Footer />
       </body>
     </html>
   );
