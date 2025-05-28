@@ -11,7 +11,7 @@ const NFTCard = ({ nft }: { nft: any }) => {
   return (
     <div className="w-full sm:w-1/2 md:w-1/3 lg:w-1/4 p-4">
       <Link href={{ pathname: "/nft-details", query: { id: nft.i } }}>
-        <div className="dark:bg-nft-black-3 bg-slate-600 text-white rounded-2xl p-4 cursor-pointer shadow-md h-full transition-transform hover:scale-105">
+        <div className="dark:bg-nft-black-3 bg-slate-800 border-1 text-white rounded-2xl p-4 cursor-pointer shadow-md h-full transition-transform hover:scale-105">
           <div className="relative w-full aspect-square overflow-hidden rounded-xl">
             <Image
               src={nftImage.src}

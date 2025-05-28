@@ -14,14 +14,14 @@ const CreatorCard = () => {
 
   return (
     <div>
-      <div className="flex flex-col items-center justify-center bg-slate-600 rounded-lg shadow-lg p-4 m-2 w-64">
+      <div className="flex flex-col items-center justify-center bg-slate-800 rounded-lg shadow-lg p-4 m-2 w-64 border-1">
         <img
           src={assets[creatorKey]?.src || assets.creator1.src}
           alt="Creator Avatar"
           className="w-24 h-24 rounded-full mb-4"
         />
         <h2 className="text-xl font-semibold">Creator Name</h2>
-        <p className="text-gray-600">Creator Bio</p>
+        <p className="text-gray-400">Creator Bio</p>
         <button className="mt-4 px-6 py-2 bg-pink-700 text-white rounded-full hover:bg-pink-900 hover:cursor-pointer transition-colors duration-300">
           Follow
         </button>
