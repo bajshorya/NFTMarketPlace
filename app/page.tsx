@@ -6,7 +6,7 @@ import NFTSection from "@/components/NFTSection";
 export default function Home() {
   return (
     <div className="px-10">
-      <div className="mt-28 pt-10">
+      <div>
         {" "}
         <div className="w-full">
           <Banner

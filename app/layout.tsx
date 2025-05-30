@@ -31,7 +31,7 @@ export default function RootLayout({
         suppressHydrationWarning // Add this to ignore hydration mismatches on body
       >
         <NavbarDemo />
-        <main className="flex-1 pt-5">
+        <main className=" pt-20 mt-28">
           {" "}
           {/* Keep this padding to match navbar height */}
           {children}
