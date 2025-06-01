@@ -2,23 +2,58 @@
 import Input from "@/components/Input";
 import CustomButton from "@/components/ui/CustomButton";
 import { NFTContext } from "@/context/NFTContext";
-import React, { useCallback, useContext, useEffect, useMemo } from "react";
+import React, {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { useDropzone } from "react-dropzone";
 import { defaultStyles, FileIcon } from "react-file-icon";
+import { ethers } from "ethers";
+import { marketAddress, marketABI } from "@/context/constants";
+import { useRouter } from "next/navigation";
+
 interface NFTContextType {
   nftCurrency: string;
+  connectWallet: () => Promise<void>;
+  currentAccount: string;
+  uploadToIPFS: (file: File) => Promise<string | null>;
 }
-const page = () => {
-  const { nftCurrency } = useContext(NFTContext) as NFTContextType;
-  const [fileUrl, setFileUrl] = React.useState<string | null>(null);
-  const [formInput, setFormInput] = React.useState({
+
+const CreateNFT = () => {
+  const { nftCurrency, connectWallet, currentAccount, uploadToIPFS } =
+    useContext(NFTContext) as NFTContextType;
+  const [fileUrl, setFileUrl] = useState<string | null>(null);
+  const [formInput, setFormInput] = useState({
     name: "",
     description: "",
     price: "",
   });
-  const onDrop = useCallback(() => {
-    //upload image to blockchain
-  }, []);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
+
+  // Handle file drop and upload to IPFS
+  const onDrop = useCallback(
+    async (acceptedFiles: File[]) => {
+      if (acceptedFiles.length === 0) return;
+      setIsLoading(true);
+      setError(null);
+      const file = acceptedFiles[0];
+      const url = await uploadToIPFS(file);
+      if (url) {
+        setFileUrl(url);
+      } else {
+        setError("Failed to upload file to IPFS");
+      }
+      setIsLoading(false);
+    },
+    [uploadToIPFS]
+  );
+  console.log(fileUrl);
+
   const {
     getRootProps,
     getInputProps,
@@ -28,10 +63,13 @@ const page = () => {
   } = useDropzone({
     onDrop,
     accept: {
-      "image/*": [],
+      "image/*": [".jpeg", ".jpg", ".png", ".gif", ".svg"],
+      "video/*": [".webm", ".mp4"],
+      "audio/*": [".mp3"],
     },
-    maxSize: 50000000,
+    maxSize: 50000000, // 50MB
   });
+
   const fileStyle = useMemo(
     () =>
       `bg-gray-900 border border-gray-500 flex flex-col items-center justify-center p-6 rounded-md border-dashed w-full mx-2 sm:mx-4 h-[200px]
@@ -41,15 +79,18 @@ const page = () => {
     `,
     [isDragActive, isDragAccept, isDragReject]
   );
+
   useEffect(() => {
     console.log(formInput);
   }, [formInput]);
+
   return (
-    <div className="py-8 px-4 sm:px-6 min-h-screen bg-black text-white">
+    <div className="py-5 px-4 sm:px-6 min-h-screen text-white">
       <div className="max-w-5xl mx-auto">
         <h1 className="font-poppins font-bold text-3xl mb-8 text-white">
           Create NFT
         </h1>
+        {error && <p className="text-red-500 mb-4 font-poppins">{error}</p>}
         <div>
           <p className="font-poppins font-semibold text-xl mb-4 text-white">
             Upload File
@@ -72,6 +113,9 @@ const page = () => {
                 </p>
               </div>
             </div>
+            {isLoading && (
+              <p className="mt-4 text-gray-300">Uploading to IPFS...</p>
+            )}
             {fileUrl && (
               <div className="mt-6">
                 <img
@@ -83,12 +127,13 @@ const page = () => {
             )}
           </div>
         </div>
-        {/* Use the Input component for NFT Name, Description, and Price */}
         <Input
           inputType="text"
           title="Name"
           placeholder="NFT Name"
-          handleClick={(e) => {
+          handleClick={(
+            e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+          ) => {
             setFormInput({ ...formInput, name: e.target.value });
           }}
         />
@@ -96,7 +141,9 @@ const page = () => {
           inputType="textarea"
           title="Description"
           placeholder="NFT Description"
-          handleClick={(e) => {
+          handleClick={(
+            e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+          ) => {
             setFormInput({ ...formInput, description: e.target.value });
           }}
         />
@@ -104,7 +151,9 @@ const page = () => {
           inputType="number"
           title="Price"
           placeholder="NFT Price"
-          handleClick={(e) => {
+          handleClick={(
+            e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+          ) => {
             setFormInput({ ...formInput, price: e.target.value });
           }}
         />
@@ -113,8 +162,10 @@ const page = () => {
         </div>
         <div className="flex items-center mt-10">
           <CustomButton
-            name="Create NFT"
-            styles="bg-pink-700 py-3 px-6 text-lg hover:cursor-pointer hover:bg-pink-400 transition-colors duration-300 rounded-lg font-semibold"
+            name={isLoading ? "Creating NFT..." : "Create NFT"}
+            styles={`bg-pink-700 py-3 px-6 text-lg hover:cursor-pointer hover:bg-pink-400 transition-colors duration-300 rounded-lg font-semibold ${
+              isLoading ? "opacity-50 cursor-not-allowed" : ""
+            }`}
             handleClick={() => {}}
           />
         </div>
@@ -123,4 +174,4 @@ const page = () => {
   );
 };
 
-export default page;
+export default CreateNFT;
