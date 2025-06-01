@@ -1,11 +1,15 @@
 "use client";
 import Input from "@/components/Input";
 import CustomButton from "@/components/ui/CustomButton";
-import React, { useCallback, useEffect, useMemo } from "react";
+import { NFTContext } from "@/context/NFTContext";
+import React, { useCallback, useContext, useEffect, useMemo } from "react";
 import { useDropzone } from "react-dropzone";
 import { defaultStyles, FileIcon } from "react-file-icon";
-
+interface NFTContextType {
+  nftCurrency: string;
+}
 const page = () => {
+  const { nftCurrency } = useContext(NFTContext) as NFTContextType;
   const [fileUrl, setFileUrl] = React.useState<string | null>(null);
   const [formInput, setFormInput] = React.useState({
     name: "",
@@ -105,7 +109,7 @@ const page = () => {
           }}
         />
         <div className="flex items-center mt-2">
-          <p className="font-poppins text-white text-xl ml-2">ETH</p>
+          <p className="font-poppins text-white text-xl ml-2">{nftCurrency}</p>
         </div>
         <div className="flex items-center mt-10">
           <CustomButton

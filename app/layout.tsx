@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Footer from "@/components/Footer";
 import NavbarDemo from "@/components/Navbar";
+import { NFTProvider } from "@/context/NFTContext"; // Import NFTProvider
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,13 +31,13 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} min-h-screen flex flex-col`}
         suppressHydrationWarning // Add this to ignore hydration mismatches on body
       >
-        <NavbarDemo />
-        <main className=" pt-20 mt-28">
+        <NFTProvider>
           {" "}
-          {/* Keep this padding to match navbar height */}
-          {children}
-        </main>
-        <Footer />
+          {/* Wrap the content with NFTProvider */}
+          <NavbarDemo />
+          <main className="pt-20 mt-28">{children}</main>
+          <Footer />
+        </NFTProvider>
       </body>
     </html>
   );

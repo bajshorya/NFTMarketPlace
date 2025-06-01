@@ -1,11 +1,15 @@
-import React from "react";
+"use client";
+import React, { useContext } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import assets from "../assets";
-
+import { NFTContext } from "@/context/NFTContext";
+interface NFTContextType {
+  nftCurrency: string;
+}
 const NFTCard = ({ nft }: { nft: any }) => {
   const nftKey = `nft${nft.i}` as keyof typeof assets; // Dynamically create the key based on nft.i example nft1, nft2, etc.
-
+  const { nftCurrency } = useContext(NFTContext) as NFTContextType;
   const nftImage = assets[nftKey] || assets.nft1;
 
   return (
@@ -26,7 +30,7 @@ const NFTCard = ({ nft }: { nft: any }) => {
               {nft.name || `NFT ${nft.i}`}
             </h3>
             <p className="text-white text-sm font-light">
-              {nft.price || "0.1"} ETH
+              {nft.price || "0.1"} {nftCurrency}
             </p>
           </div>
         </div>

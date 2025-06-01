@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import {
   HoveredLink,
   Menu,
@@ -11,43 +11,47 @@ import { cn } from "@/lib/utils";
 import Link from "next/link";
 import icon from "../public/reshot-icon-beer-D3X8V2SQAP.svg";
 import { useRouter } from "next/navigation";
-
-// export function Navbar() {
-//   return (
-//     <div className="relative w-full flex items-center justify-center">
-//       <NavbarDemo className="top-2" />
-//       <p className="text-black dark:text-white">
-//         The Navbar will show on top of the page
-//       </p>
-//     </div>
-//   );
-// }
+import { NFTContext } from "@/context/NFTContext";
 
 const ButtonGroup = ({
   setActive,
   router,
 }: {
   setActive: any;
-  // Function to set active state>;
   router: ReturnType<typeof useRouter>;
 }) => {
+  const { connectWallet, currentAccount, disconnectWallet } = useContext(
+    NFTContext
+  ) as {
+    connectWallet: () => void;
+    currentAccount: string | null;
+    disconnectWallet: () => void;
+  };
   const hasConnectedWallet = true;
 
-  return hasConnectedWallet ? (
-    <div className="flex items-center gap-4">
+  return currentAccount ? (
+    <div className="flex items-center gap-3">
       <CustomButton
-        name="Create "
-        styles="bg-pink-700 p-5"
+        name="Create"
+        styles="bg-pink-700 py-2 px-4 text-sm font-semibold rounded-md hover:bg-pink-600 transition-colors duration-200"
         handleClick={() => {
           setActive("");
-          // Reset active state when signing in
           router.push("/create-nft");
         }}
       />
+      <CustomButton
+        name="Disconnect Wallet"
+        styles="bg-pink-700 py-2 px-4 text-sm font-semibold rounded-md hover:bg-pink-600 transition-colors duration-200"
+        handleClick={disconnectWallet}
+      />
     </div>
   ) : (
-    <div className="flex items-center gap-4">
-      <CustomButton name="Connect Wallet" styles="bg-pink-700 p-5" />
+    <div className="flex items-center gap-3">
+      <CustomButton
+        name="Connect Wallet"
+        styles="bg-pink-700 py-2 px-4 text-sm font-semibold rounded-md hover:bg-pink-600 transition-colors duration-200"
+        handleClick={connectWallet}
+      />
     </div>
   );
 };
@@ -57,15 +61,15 @@ const NavbarDemo = ({ className }: { className?: string }) => {
   const [active, setActive] = useState<string | null>(null);
   return (
     <div
-      className={cn("fixed top-10 inset-x-0 max-w-4xl mx-auto z-50", className)}
+      className={cn("fixed top-6 inset-x-0 max-w-5xl mx-auto z-50", className)}
     >
       <Menu setActive={setActive}>
-        <Link href="/" className="flex gap-2">
+        <Link href="/" className="flex items-center gap-2 text-sm font-medium">
           <div>Home</div>
         </Link>
 
         <MenuItem setActive={setActive} active={active} item="Services">
-          <div className="flex flex-col space-y-4 text-sm">
+          <div className="flex flex-col gap-3 text-sm p-2">
             <HoveredLink href="/web-dev">Web Development</HoveredLink>
             <HoveredLink href="/interface-design">Interface Design</HoveredLink>
             <HoveredLink href="/seo">Search Engine Optimization</HoveredLink>
@@ -73,7 +77,7 @@ const NavbarDemo = ({ className }: { className?: string }) => {
           </div>
         </MenuItem>
         <MenuItem setActive={setActive} active={active} item="Products">
-          <div className="  text-sm grid grid-cols-2 gap-10 p-4">
+          <div className="text-sm grid grid-cols-2 gap-6 p-3">
             <ProductItem
               title="Algochurn"
               href="https://algochurn.com"
@@ -101,7 +105,7 @@ const NavbarDemo = ({ className }: { className?: string }) => {
           </div>
         </MenuItem>
         <MenuItem setActive={setActive} active={active} item="Pricing">
-          <div className="flex flex-col space-y-4 text-sm">
+          <div className="flex flex-col gap-3 text-sm p-2">
             <HoveredLink href="/hobby">Hobby</HoveredLink>
             <HoveredLink href="/individual">Individual</HoveredLink>
             <HoveredLink href="/team">Team</HoveredLink>
