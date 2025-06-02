@@ -1,22 +1,81 @@
 "use client";
 import Web3Modal from "web3modal";
 import { createContext, useContext, useEffect, useState } from "react";
-import { ethers } from "ethers";
+import { ethers, BrowserProvider, Signer, Contract } from "ethers";
 import axios from "axios";
-
 import { marketAddress, marketABI } from "./constants";
-
-export const NFTContext = createContext({});
-
 import { ReactNode } from "react";
+import { useRouter } from "next/navigation";
 
-export const NFTProvider = ({ children }: { children: ReactNode }) => {
-  const [currentAccount, setCurrentAccount] = useState("");
+export interface FormInput {
+  name: string;
+  description: string;
+  price: string;
+}
+
+export interface NFT {
+  tokenId: string;
+  seller: string;
+  owner: string;
+  price: bigint;
+  image?: string;
+  name: string;
+  description: string;
+  tokenURI: string;
+}
+
+interface MarketItem {
+  tokenId: bigint;
+  seller: string;
+  owner: string;
+  price: bigint;
+}
+
+export interface NFTContextType {
+  nftCurrency: string;
+  connectWallet: () => Promise<void>;
+  currentAccount: string;
+  disconnectWallet: () => void;
+  uploadToIPFS: (file: File) => Promise<string | null>;
+  createNFT: (
+    formInput: FormInput,
+    fileUrl: string,
+    router: ReturnType<typeof useRouter>
+  ) => Promise<void>;
+  fetchNFT: () => Promise<NFT[]>;
+}
+export const formatPrice = (price: bigint): string => {
+  return ethers.formatUnits(price, "ether");
+};
+export const NFTContext = createContext<NFTContextType>({
+  nftCurrency: "ETH",
+  connectWallet: async () => {},
+  currentAccount: "",
+  disconnectWallet: () => {},
+  uploadToIPFS: async () => null,
+  createNFT: async () => {},
+  fetchNFT: async () => [],
+});
+
+const fetchContract = (
+  signerOrProvider: BrowserProvider | Signer
+): Contract => {
+  return new ethers.Contract(marketAddress, marketABI, signerOrProvider);
+};
+
+interface NFTProviderProps {
+  children: ReactNode;
+}
+
+export const NFTProvider: React.FC<NFTProviderProps> = ({ children }) => {
+  const [currentAccount, setCurrentAccount] = useState<string>("");
   const nftCurrency = "ETH";
 
-  // Check if wallet is connected
-  const checkIfWalletIsConnected = async () => {
-    if (!window.ethereum) return alert("Please install MetaMask");
+  const checkIfWalletIsConnected = async (): Promise<void> => {
+    if (!window.ethereum) {
+      alert("Please install MetaMask");
+      return;
+    }
     try {
       const accounts = await window.ethereum.request({
         method: "eth_accounts",
@@ -35,9 +94,11 @@ export const NFTProvider = ({ children }: { children: ReactNode }) => {
     checkIfWalletIsConnected();
   }, []);
 
-  // Connect wallet
-  const connectWallet = async () => {
-    if (!window.ethereum) return alert("Please install MetaMask");
+  const connectWallet = async (): Promise<void> => {
+    if (!window.ethereum) {
+      alert("Please install MetaMask");
+      return;
+    }
     try {
       const accounts = await window.ethereum.request({
         method: "eth_requestAccounts",
@@ -49,13 +110,11 @@ export const NFTProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // Disconnect wallet
-  const disconnectWallet = async () => {
+  const disconnectWallet = (): void => {
     setCurrentAccount("");
   };
 
-  // Upload file to IPFS via Pinata using API Key and Secret
-  const uploadToIPFS = async (file: File) => {
+  const uploadToIPFS = async (file: File): Promise<string | null> => {
     try {
       const apiKey = process.env.NEXT_PUBLIC_PINATA_API_KEY;
       const apiSecret = process.env.NEXT_PUBLIC_PINATA_API_SECRET;
@@ -65,19 +124,14 @@ export const NFTProvider = ({ children }: { children: ReactNode }) => {
         );
         return null;
       }
-      console.log("Uploading file to IPFS:", file.name);
 
       const formData = new FormData();
       formData.append("file", file);
 
-      const pinataMetadata = JSON.stringify({
-        name: file.name,
-      });
+      const pinataMetadata = JSON.stringify({ name: file.name });
       formData.append("pinataMetadata", pinataMetadata);
 
-      const pinataOptions = JSON.stringify({
-        cidVersion: 0,
-      });
+      const pinataOptions = JSON.stringify({ cidVersion: 0 });
       formData.append("pinataOptions", pinataOptions);
 
       const res = await axios.post(
@@ -93,7 +147,6 @@ export const NFTProvider = ({ children }: { children: ReactNode }) => {
       );
 
       const ipfsHash = res.data.IpfsHash;
-      console.log("File uploaded to IPFS, hash:", ipfsHash);
       return `https://ipfs.io/ipfs/${ipfsHash}`;
     } catch (error: any) {
       console.error("Error uploading to IPFS:", error);
@@ -105,11 +158,105 @@ export const NFTProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  useEffect(() => {
-    if (currentAccount) {
-      console.log("Connected account:", currentAccount);
+  const createNFT = async (
+    formInput: FormInput,
+    fileUrl: string,
+    router: ReturnType<typeof useRouter>
+  ): Promise<void> => {
+    const { name, description, price } = formInput;
+    if (!name || !description || !price || !fileUrl) {
+      console.error("All fields are required");
+      return;
     }
-  }, [currentAccount]);
+
+    const data = JSON.stringify({ name, description, image: fileUrl });
+
+    try {
+      const apiKey = process.env.NEXT_PUBLIC_PINATA_API_KEY;
+      const apiSecret = process.env.NEXT_PUBLIC_PINATA_API_SECRET;
+      if (!apiKey || !apiSecret) {
+        console.error(
+          "Pinata API Key or Secret is not set in environment variables"
+        );
+        return;
+      }
+
+      const res = await axios.post(
+        "https://api.pinata.cloud/pinning/pinJSONToIPFS",
+        data,
+        {
+          headers: {
+            pinata_api_key: apiKey,
+            pinata_secret_api_key: apiSecret,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      const tokenURI = `https://ipfs.io/ipfs/${res.data.IpfsHash}`;
+      await createSale(tokenURI, price);
+      router.push("/");
+    } catch (error: any) {
+      console.error("Error creating NFT:", error);
+      if (error.response) {
+        console.error("Pinata API response:", error.response.data);
+        console.error("Status code:", error.response.status);
+      }
+    }
+  };
+
+  const createSale = async (
+    url: string,
+    formInputPrice: string,
+    isReselling?: boolean,
+    id?: string
+  ): Promise<void> => {
+    try {
+      const web3modal = new Web3Modal();
+      const connection = await web3modal.connect();
+      const provider = new BrowserProvider(connection);
+      const signer = await provider.getSigner();
+      const price = ethers.parseUnits(formInputPrice, "ether");
+      const contract = fetchContract(signer);
+
+      const listingPrice = await contract.getListingPrice();
+      const transaction = await contract.createToken(url, price, {
+        value: listingPrice.toString(),
+      });
+      await transaction.wait();
+    } catch (error) {
+      console.error("Error in createSale:", error);
+      throw error;
+    }
+  };
+
+  const fetchNFT = async (): Promise<NFT[]> => {
+    const provider = new BrowserProvider(window.ethereum);
+    const contract = fetchContract(provider);
+    const data: MarketItem[] = await contract.fetchMarketItems();
+
+    const items = await Promise.all(
+      data.map(async ({ tokenId, seller, owner, price: unformattedPrice }) => {
+        const tokenURI = await contract.tokenURI(tokenId);
+        const {
+          data: { image, name, description },
+        } = await axios.get(tokenURI);
+
+        return {
+          price: unformattedPrice,
+          tokenId: tokenId.toString(),
+          seller,
+          owner,
+          image,
+          name,
+          description,
+          tokenURI,
+        };
+      })
+    );
+
+    return items;
+  };
 
   return (
     <NFTContext.Provider
@@ -119,6 +266,8 @@ export const NFTProvider = ({ children }: { children: ReactNode }) => {
         currentAccount,
         disconnectWallet,
         uploadToIPFS,
+        createNFT,
+        fetchNFT,
       }}
     >
       {children}
@@ -126,4 +275,4 @@ export const NFTProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
-export const useNFTContext = () => useContext(NFTContext);
+export const useNFTContext = (): NFTContextType => useContext(NFTContext);

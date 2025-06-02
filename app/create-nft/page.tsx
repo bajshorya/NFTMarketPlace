@@ -11,20 +11,16 @@ import React, {
 } from "react";
 import { useDropzone } from "react-dropzone";
 import { defaultStyles, FileIcon } from "react-file-icon";
-import { ethers } from "ethers";
-import { marketAddress, marketABI } from "@/context/constants";
 import { useRouter } from "next/navigation";
 
-interface NFTContextType {
-  nftCurrency: string;
-  connectWallet: () => Promise<void>;
-  currentAccount: string;
-  uploadToIPFS: (file: File) => Promise<string | null>;
-}
-
 const CreateNFT = () => {
-  const { nftCurrency, connectWallet, currentAccount, uploadToIPFS } =
-    useContext(NFTContext) as NFTContextType;
+  const {
+    nftCurrency,
+    connectWallet,
+    currentAccount,
+    uploadToIPFS,
+    createNFT,
+  } = useContext(NFTContext);
   const [fileUrl, setFileUrl] = useState<string | null>(null);
   const [formInput, setFormInput] = useState({
     name: "",
@@ -35,24 +31,28 @@ const CreateNFT = () => {
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
-  // Handle file drop and upload to IPFS
   const onDrop = useCallback(
     async (acceptedFiles: File[]) => {
       if (acceptedFiles.length === 0) return;
       setIsLoading(true);
       setError(null);
-      const file = acceptedFiles[0];
-      const url = await uploadToIPFS(file);
-      if (url) {
-        setFileUrl(url);
-      } else {
-        setError("Failed to upload file to IPFS");
+      try {
+        const file = acceptedFiles[0];
+        const url = await uploadToIPFS(file);
+        if (url) {
+          setFileUrl(url);
+        } else {
+          setError("Failed to upload file to IPFS");
+        }
+      } catch (err) {
+        setError("Error uploading file");
+        console.error(err);
+      } finally {
+        setIsLoading(false);
       }
-      setIsLoading(false);
     },
     [uploadToIPFS]
   );
-  console.log(fileUrl);
 
   const {
     getRootProps,
@@ -67,7 +67,7 @@ const CreateNFT = () => {
       "video/*": [".webm", ".mp4"],
       "audio/*": [".mp3"],
     },
-    maxSize: 50000000, // 50MB
+    maxSize: 50000000,
   });
 
   const fileStyle = useMemo(
@@ -166,7 +166,7 @@ const CreateNFT = () => {
             styles={`bg-pink-700 py-3 px-6 text-lg hover:cursor-pointer hover:bg-pink-400 transition-colors duration-300 rounded-lg font-semibold ${
               isLoading ? "opacity-50 cursor-not-allowed" : ""
             }`}
-            handleClick={() => {}}
+            handleClick={() => createNFT(formInput, fileUrl ?? "", router)}
           />
         </div>
       </div>

@@ -2,15 +2,13 @@
 import React, { useContext } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import assets from "../assets";
 import { NFTContext } from "@/context/NFTContext";
 interface NFTContextType {
   nftCurrency: string;
 }
 const NFTCard = ({ nft }: { nft: any }) => {
-  const nftKey = `nft${nft.i}` as keyof typeof assets; // Dynamically create the key based on nft.i example nft1, nft2, etc.
   const { nftCurrency } = useContext(NFTContext) as NFTContextType;
-  const nftImage = assets[nftKey] || assets.nft1;
+  const nftImage = nft.image || "/default-nft.png"; // Fallback to a default image if nft.image is not available
 
   return (
     <div className="w-full sm:w-1/2 md:w-1/3 lg:w-1/4 p-4">
@@ -18,7 +16,7 @@ const NFTCard = ({ nft }: { nft: any }) => {
         <div className="dark:bg-nft-black-3 bg-slate-800 border-1 text-white rounded-2xl p-4 cursor-pointer shadow-md h-full transition-transform hover:scale-105">
           <div className="relative w-full aspect-square overflow-hidden rounded-xl">
             <Image
-              src={nftImage.src}
+              src={nftImage}
               alt={nft.name || `NFT ${nft.i}`}
               fill
               className="object-cover"
@@ -30,7 +28,8 @@ const NFTCard = ({ nft }: { nft: any }) => {
               {nft.name || `NFT ${nft.i}`}
             </h3>
             <p className="text-white text-sm font-light">
-              {nft.price || "0.1"} {nftCurrency}
+              {nft.price ? (Number(nft.price) / 1e18).toFixed(4) : "0.1"}{" "}
+              {nftCurrency}
             </p>
           </div>
         </div>

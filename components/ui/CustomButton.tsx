@@ -3,6 +3,7 @@ import React from "react";
 type ButtonProps = {
   name: string;
   styles?: string;
+  
 
   handleClick?: () => void; // Add onClick prop
 };
