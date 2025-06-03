@@ -13,7 +13,7 @@ const NFTCard = ({ nft }: { nft: any }) => {
   const nftImage = nft.image || "/default-nft.png";
 
   return (
-    <div className="w-full sm:w-1/2 md:w-1/3 lg:w-1/4 p-3">
+    <div className="w-full  p-3">
       <Link href={{ pathname: "/nft-details", query: { id: nft.i } }}>
         <div className="bg-slate-800  rounded-xl overflow-hidden border border-neutral-700 transition-all duration-300 ease-in-out h-full flex flex-col hover:shadow-lg hover:-translate-y-1 hover:border-neutral-500 group cursor-pointer relativeafter:absolute after:inset-0 after:bg-neutral-900 after:opacity-0 hover:after:opacity-5 after:transition-opacity after:duration-300 hover:bg-slate-600">
           {/* Image container */}

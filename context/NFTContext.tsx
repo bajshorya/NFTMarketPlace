@@ -43,6 +43,7 @@ export interface NFTContextType {
     router: ReturnType<typeof useRouter>
   ) => Promise<void>;
   fetchNFT: () => Promise<NFT[]>;
+  fetchMyNFTsOrListedNFTs: (type: any) => Promise<NFT[]>;
 }
 export const formatPrice = (price: bigint): string => {
   return ethers.formatUnits(price, "ether");
@@ -55,6 +56,7 @@ export const NFTContext = createContext<NFTContextType>({
   uploadToIPFS: async () => null,
   createNFT: async () => {},
   fetchNFT: async () => [],
+  fetchMyNFTsOrListedNFTs: async () => [],
 });
 
 const fetchContract = (
@@ -236,28 +238,72 @@ export const NFTProvider: React.FC<NFTProviderProps> = ({ children }) => {
     const data: MarketItem[] = await contract.fetchMarketItems();
 
     const items = await Promise.all(
-      data.map(async ({ tokenId, seller, owner, price: unformattedPrice }) => {
-        const tokenURI = await contract.tokenURI(tokenId);
-        const {
-          data: { image, name, description },
-        } = await axios.get(tokenURI);
-
-        return {
-          price: unformattedPrice,
-          tokenId: tokenId.toString(),
+      data.map(
+        async ({
+          tokenId,
           seller,
           owner,
-          image,
-          name,
-          description,
-          tokenURI,
-        };
-      })
+          price: unformattedPrice,
+        }: MarketItem) => {
+          const tokenURI = await contract.tokenURI(tokenId);
+          const {
+            data: { image, name, description },
+          } = await axios.get(tokenURI);
+
+          return {
+            price: unformattedPrice,
+            tokenId: tokenId.toString(),
+            seller,
+            owner,
+            image,
+            name,
+            description,
+            tokenURI,
+          };
+        }
+      )
     );
 
     return items;
   };
+  const fetchMyNFTsOrListedNFTs = async (type: any) => {
+    const web3modal = new Web3Modal();
+    const connection = await web3modal.connect();
+    const provider = new BrowserProvider(connection);
+    const signer = await provider.getSigner();
+    const contract = fetchContract(signer);
+    const data =
+      type === "fetchItemsListed"
+        ? await contract.fetchItemsListed()
+        : await contract.fetchMyNFTs();
+    const items = await Promise.all(
+      data.map(
+        async ({
+          tokenId,
+          seller,
+          owner,
+          price: unformattedPrice,
+        }: MarketItem) => {
+          const tokenURI = await contract.tokenURI(tokenId);
+          const {
+            data: { image, name, description },
+          } = await axios.get(tokenURI);
 
+          return {
+            price: unformattedPrice,
+            tokenId: tokenId.toString(),
+            seller,
+            owner,
+            image,
+            name,
+            description,
+            tokenURI,
+          };
+        }
+      )
+    );
+    return items;
+  };
   return (
     <NFTContext.Provider
       value={{
@@ -268,6 +314,7 @@ export const NFTProvider: React.FC<NFTProviderProps> = ({ children }) => {
         uploadToIPFS,
         createNFT,
         fetchNFT,
+        fetchMyNFTsOrListedNFTs,
       }}
     >
       {children}
