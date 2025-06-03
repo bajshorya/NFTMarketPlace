@@ -35,7 +35,7 @@ export default function RootLayout({
           {" "}
           {/* Wrap the content with NFTProvider */}
           <NavbarDemo />
-          <main className="pt-20 mt-28">{children}</main>
+          <main className="pt-10 mt-16">{children}</main>
           <Footer />
         </NFTProvider>
       </body>
