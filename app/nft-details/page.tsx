@@ -5,7 +5,48 @@ import Image from "next/image";
 import Loader from "./loading";
 import { NFTContext } from "@/context/NFTContext";
 import { shortenAddress } from "@/components/NFTCard";
+import CustomButton from "@/components/ui/CustomButton";
+import Modal from "@/components/Modal";
 
+type PaymentBodyCmpProps = {
+  nft: {
+    image: string;
+    name: string;
+    price: number;
+    tokenId: string;
+    owner: string;
+    seller: string;
+    tokenURI: string;
+    description: string;
+  };
+  nftCurrency: string;
+};
+
+const PaymentBodyCmp: React.FC<PaymentBodyCmpProps> = ({
+  nft,
+  nftCurrency,
+}) => {
+  return (
+    <div className="flex flex-col items-center">
+      <Image
+        src={nft.image}
+        alt={nft.name}
+        width={300}
+        height={300}
+        className="rounded-lg mb-4 border-2 border-gray-300 shadow-lg object-cover
+        transition-transform duration-300 ease-in-out transform hover:scale-105"
+      />
+      <h2 className="text-3xl font-semibold mb-2 font-serif">{nft.name}</h2>
+      <p className="font-semibold border-1 p-2 border-dashed mb-4">
+        Price: {nft.price} {nftCurrency}
+      </p>
+      <p className="font-semibold mb-3">Seller:{shortenAddress(nft.seller)}</p>
+      <p className="text-gray-300 mb-6">
+        Proceed with the payment to complete your purchase.
+      </p>
+    </div>
+  );
+};
 const NftDetails = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [nft, setNft] = useState({
@@ -18,9 +59,10 @@ const NftDetails = () => {
     seller: "",
     tokenURI: "",
   });
-  const { fetchNFT, nftCurrency } = useContext(NFTContext);
+  const { fetchNFT, nftCurrency, currentAccount } = useContext(NFTContext);
   const searchParams = useSearchParams();
   const nftId = searchParams.get("id");
+  const [paymentModal, setPaymentModal] = useState(false);
 
   useEffect(() => {
     if (!nftId) {
@@ -117,17 +159,51 @@ const NftDetails = () => {
                 </p>
               </div>
             </div>
-
-            {/* Action Button */}
-            <button
-              className="bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-blue-700 transition-all duration-300"
-              onClick={() => alert("Buy functionality coming soon!")}
-            >
-              Buy NFT
-            </button>
+            <div className="flex flex-row sm:flex-col mt-10 ">
+              {currentAccount === nft.seller.toLowerCase() ? (
+                <div className="border-1">
+                  <p className="font-sans  text-center text-2xl ">
+                    You cannot buy your own NFT
+                  </p>
+                </div>
+              ) : (
+                <div>
+                  <CustomButton
+                    name={`Buy Now for ${nft.price} ${nftCurrency} `}
+                    styles=" text-white font-semibold py-3 px-6 rounded-lg shadow-md transition duration-300 ease-in-out"
+                    handleClick={() => setPaymentModal(true)}
+                  />
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
+      {paymentModal && (
+        <Modal
+          header="Checkout"
+          body={<PaymentBodyCmp nft={nft} nftCurrency={nftCurrency} />}
+          footer={
+            <div>
+              <div className="flex flex-row justify-between mt-6 ">
+                <CustomButton
+                  name="Checkout"
+                  styles="bg-pink-700 text-lg p-6 mx-4"
+                  handleClick={() => {}}
+                />
+                <CustomButton
+                  name="Cancel"
+                  styles="bg-pink-700 text-lg p-6 mx-4"
+                  handleClick={() => {
+                    setPaymentModal(false);
+                  }}
+                />
+              </div>
+            </div>
+          }
+          handleClose={() => setPaymentModal(false)}
+        />
+      )}
     </div>
   );
 };
