@@ -173,7 +173,6 @@ const NftDetails = () => {
     <div className=" min-h-screen py-12 px-4 sm:px-6 lg:px-8 ">
       <div className="max-w-5xl mx-auto border-2 rounded-2xl bg-slate-800 p-8 shadow-lg">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {/* NFT Image */}
           <div className="relative w-full aspect-square">
             <Image
               src={nft.image}

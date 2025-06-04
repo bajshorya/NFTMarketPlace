@@ -32,8 +32,8 @@ const Page = () => {
 
   if (!isLoading && nfts.length === 0) {
     return (
-      <div className="flex items-center justify-center h-screen bg-slate-900">
-        <div className="text-white text-lg">No NFTs found</div>
+      <div className="flex items-center justify-center h-screen ">
+        <div className="text-white text-4xl font-bold">NO NFTs FOUND</div>
       </div>
     );
   }
