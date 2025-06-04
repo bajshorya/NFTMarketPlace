@@ -72,7 +72,7 @@ const NavbarDemo = ({ className }: { className?: string }) => {
           href="/listed-nft"
           className="flex items-center gap-2 text-lg font-bold"
         >
-          <div>Listed NFT's</div>
+          <div>Your Listings</div>
         </Link>
         <Link
           href="/my-nft"
