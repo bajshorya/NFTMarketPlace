@@ -44,6 +44,7 @@ export interface NFTContextType {
   ) => Promise<void>;
   fetchNFT: () => Promise<NFT[]>;
   fetchMyNFTsOrListedNFTs: (type: any) => Promise<NFT[]>;
+  buyNft?: (nft: NFT) => Promise<void>;
 }
 export const formatPrice = (price: bigint): string => {
   return ethers.formatUnits(price, "ether");
@@ -57,6 +58,7 @@ export const NFTContext = createContext<NFTContextType>({
   createNFT: async () => {},
   fetchNFT: async () => [],
   fetchMyNFTsOrListedNFTs: async () => [],
+  buyNft: async () => {},
 });
 
 const fetchContract = (
@@ -304,6 +306,19 @@ export const NFTProvider: React.FC<NFTProviderProps> = ({ children }) => {
     );
     return items;
   };
+  const buyNft = async (nft: NFT): Promise<void> => {
+    const web3modal = new Web3Modal();
+    const connection = await web3modal.connect();
+    const provider = new BrowserProvider(connection);
+    const signer = await provider.getSigner();
+    const contract = fetchContract(signer);
+
+    // No need to convert price here since it should already be in wei
+    const transaction = await contract.createMarketSale(nft.tokenId, {
+      value: nft.price, // Directly use the price which should be in wei
+    });
+    await transaction.wait();
+  };
   return (
     <NFTContext.Provider
       value={{
@@ -315,6 +330,7 @@ export const NFTProvider: React.FC<NFTProviderProps> = ({ children }) => {
         createNFT,
         fetchNFT,
         fetchMyNFTsOrListedNFTs,
+        buyNft,
       }}
     >
       {children}

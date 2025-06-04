@@ -7,6 +7,7 @@ import { NFTContext } from "@/context/NFTContext";
 import { shortenAddress } from "@/components/NFTCard";
 import CustomButton from "@/components/ui/CustomButton";
 import Modal from "@/components/Modal";
+import { ethers } from "ethers";
 
 type PaymentBodyCmpProps = {
   nft: {
@@ -59,11 +60,30 @@ const NftDetails = () => {
     seller: "",
     tokenURI: "",
   });
-  const { fetchNFT, nftCurrency, currentAccount } = useContext(NFTContext);
+  const { fetchNFT, nftCurrency, currentAccount, buyNft } =
+    useContext(NFTContext);
   const searchParams = useSearchParams();
   const nftId = searchParams.get("id");
   const [paymentModal, setPaymentModal] = useState(false);
+  const checkout = async () => {
+    if (!buyNft) {
+      console.error("buyNft function is not available");
+      return;
+    }
 
+    try {
+      const priceInWei = ethers.parseUnits(nft.price.toString(), "ether");
+      await buyNft({
+        ...nft,
+        price: priceInWei,
+      });
+      setPaymentModal(false);
+      alert("NFT purchased successfully!");
+    } catch (error) {
+      console.error("Failed to purchase NFT:", error);
+      alert("Failed to purchase NFT. Please try again.");
+    }
+  };
   useEffect(() => {
     if (!nftId) {
       setIsLoading(false);
@@ -189,7 +209,7 @@ const NftDetails = () => {
                 <CustomButton
                   name="Checkout"
                   styles="bg-pink-700 text-lg p-6 mx-4"
-                  handleClick={() => {}}
+                  handleClick={checkout}
                 />
                 <CustomButton
                   name="Cancel"
