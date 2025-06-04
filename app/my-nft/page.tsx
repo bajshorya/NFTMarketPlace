@@ -16,9 +16,10 @@ const Page = () => {
       .then((items) => {
         setNfts(items);
         setIsLoading(false);
+        console.log("My NFTs:", items);
       })
       .catch((error) => {
-        console.error("Failed to fetch listed NFTs:", error);
+        console.error("Failed to fetch MY NFTs:", error);
         setIsLoading(false);
       });
   }, [fetchMyNFTsOrListedNFTs]);

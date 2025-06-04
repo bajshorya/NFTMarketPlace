@@ -48,6 +48,7 @@ const PaymentBodyCmp: React.FC<PaymentBodyCmpProps> = ({
     </div>
   );
 };
+
 const NftDetails = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [nft, setNft] = useState({
@@ -60,11 +61,17 @@ const NftDetails = () => {
     seller: "",
     tokenURI: "",
   });
-  const { fetchNFT, nftCurrency, currentAccount, buyNft } =
-    useContext(NFTContext);
+  const {
+    fetchNFT,
+    fetchMyNFTsOrListedNFTs,
+    nftCurrency,
+    currentAccount,
+    buyNft,
+  } = useContext(NFTContext);
   const searchParams = useSearchParams();
   const nftId = searchParams.get("id");
   const [paymentModal, setPaymentModal] = useState(false);
+
   const checkout = async () => {
     if (!buyNft) {
       console.error("buyNft function is not available");
@@ -84,36 +91,67 @@ const NftDetails = () => {
       alert("Failed to purchase NFT. Please try again.");
     }
   };
+
   useEffect(() => {
     if (!nftId) {
       setIsLoading(false);
       return;
     }
 
+    // First, try to fetch from market listings
     fetchNFT()
-      .then((nfts) => {
-        const foundNft = nfts.find((item) => item.tokenId === nftId);
-        if (foundNft) {
+      .then((marketNfts) => {
+        const foundMarketNft = marketNfts.find(
+          (item) => item.tokenId === nftId
+        );
+        if (foundMarketNft) {
           setNft({
-            image: foundNft.image || "/default-nft.png",
-            tokenId: foundNft.tokenId,
-            name: foundNft.name || `NFT ${foundNft.tokenId}`,
-            description: foundNft.description || "No description available",
-            price: Number(foundNft.price) / 1e18,
-            owner: foundNft.owner,
-            seller: foundNft.seller,
-            tokenURI: foundNft.tokenURI,
+            image: foundMarketNft.image || "/default-nft.png",
+            tokenId: foundMarketNft.tokenId,
+            name: foundMarketNft.name || `NFT ${foundMarketNft.tokenId}`,
+            description:
+              foundMarketNft.description || "No description available",
+            price: Number(foundMarketNft.price) / 1e18,
+            owner: foundMarketNft.owner,
+            seller: foundMarketNft.seller,
+            tokenURI: foundMarketNft.tokenURI,
           });
+          setIsLoading(false);
         } else {
-          console.error("NFT not found for ID:", nftId);
+          // If not found in market listings, try fetching from owned NFTs
+          fetchMyNFTsOrListedNFTs("")
+            .then((ownedNfts) => {
+              const foundOwnedNft = ownedNfts.find(
+                (item) => item.tokenId === nftId
+              );
+              if (foundOwnedNft) {
+                setNft({
+                  image: foundOwnedNft.image || "/default-nft.png",
+                  tokenId: foundOwnedNft.tokenId,
+                  name: foundOwnedNft.name || `NFT ${foundOwnedNft.tokenId}`,
+                  description:
+                    foundOwnedNft.description || "No description available",
+                  price: Number(foundOwnedNft.price) / 1e18,
+                  owner: foundOwnedNft.owner,
+                  seller: foundOwnedNft.seller,
+                  tokenURI: foundOwnedNft.tokenURI,
+                });
+              } else {
+                console.log("NFT not found for ID:", nftId);
+              }
+              setIsLoading(false);
+            })
+            .catch((error) => {
+              console.error("Failed to fetch owned NFT details:", error);
+              setIsLoading(false);
+            });
         }
-        setIsLoading(false);
       })
       .catch((error) => {
-        console.error("Failed to fetch NFT details:", error);
+        console.error("Failed to fetch market NFT details:", error);
         setIsLoading(false);
       });
-  }, [nftId, fetchNFT]);
+  }, [nftId, fetchNFT, fetchMyNFTsOrListedNFTs]);
 
   if (isLoading) {
     return (
