@@ -67,7 +67,7 @@ const Page = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {nfts.map((nft) => (
               <div key={nft.tokenId} className="min-w-[250px]">
-                <NFTCard nft={nft} />
+                <NFTCard nft={nft} onProfilePage />
               </div>
             ))}
           </div>

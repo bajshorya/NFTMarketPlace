@@ -45,6 +45,12 @@ export interface NFTContextType {
   fetchNFT: () => Promise<NFT[]>;
   fetchMyNFTsOrListedNFTs: (type: any) => Promise<NFT[]>;
   buyNft?: (nft: NFT) => Promise<void>;
+  createSale: (
+    url: string,
+    formInputPrice: string,
+    isReselling?: boolean,
+    id?: string
+  ) => Promise<void>;
 }
 export const formatPrice = (price: bigint): string => {
   return ethers.formatUnits(price, "ether");
@@ -59,6 +65,7 @@ export const NFTContext = createContext<NFTContextType>({
   fetchNFT: async () => [],
   fetchMyNFTsOrListedNFTs: async () => [],
   buyNft: async () => {},
+  createSale: async () => {},
 });
 
 const fetchContract = (
@@ -224,10 +231,24 @@ export const NFTProvider: React.FC<NFTProviderProps> = ({ children }) => {
       const contract = fetchContract(signer);
 
       const listingPrice = await contract.getListingPrice();
-      const transaction = await contract.createToken(url, price, {
-        value: listingPrice.toString(),
-      });
-      await transaction.wait();
+      const transaction = !isReselling
+        ? await contract.createToken(url, price, {
+            value: listingPrice.toString(),
+          })
+        : await contract.resellToken(id, price, {
+            value: listingPrice.toString(),
+          });
+
+      console.log("Transaction object:", transaction);
+
+      if (transaction.wait) {
+        await transaction.wait();
+      } else {
+        console.error("Transaction object does not have a wait method.");
+        throw new Error(
+          "Invalid transaction object returned from contract method."
+        );
+      }
     } catch (error) {
       console.error("Error in createSale:", error);
       throw error;
@@ -331,6 +352,7 @@ export const NFTProvider: React.FC<NFTProviderProps> = ({ children }) => {
         fetchNFT,
         fetchMyNFTsOrListedNFTs,
         buyNft,
+        createSale,
       }}
     >
       {children}

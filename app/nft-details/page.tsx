@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState, useContext } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Loader from "./loading";
 import { NFTContext } from "@/context/NFTContext";
@@ -71,7 +71,8 @@ const NftDetails = () => {
   const searchParams = useSearchParams();
   const nftId = searchParams.get("id");
   const [paymentModal, setPaymentModal] = useState(false);
-
+  const router = useRouter();
+ 
   const checkout = async () => {
     if (!buyNft) {
       console.error("buyNft function is not available");
@@ -223,6 +224,16 @@ const NftDetails = () => {
                     You cannot buy your own NFT
                   </p>
                 </div>
+              ) : currentAccount === nft.owner.toLowerCase() ? (
+                <CustomButton
+                  name={`List On MarketPlace `}
+                  styles=" text-white font-semibold py-3 px-6 rounded-lg shadow-md transition duration-300 ease-in-out"
+                  handleClick={() =>
+                    router.push(
+                      `/resell-nft?id=${nft.tokenId}&tokenURI=${nft.tokenURI}`
+                    )
+                  }
+                />
               ) : (
                 <div>
                   <CustomButton

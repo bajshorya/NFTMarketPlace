@@ -8,7 +8,7 @@ interface NFTContextType {
   nftCurrency: string;
 }
 
-const NFTCard = ({ nft }: { nft: any }) => {
+const NFTCard = ({ nft, onProfilePage }: { nft: any; onProfilePage?: any }) => {
   const { nftCurrency } = useContext(NFTContext) as NFTContextType;
   const nftImage = nft.image || "../assets/nft10.jpeg";
 
@@ -45,7 +45,7 @@ const NFTCard = ({ nft }: { nft: any }) => {
                 </div>
                 <div>
                   <p className="text-sm font-mono text-neutral-600 dark:text-neutral-300">
-                    {nft.owner ? shortenAddress(nft.owner) : "No Owner"}
+                    {shortenAddress(onProfilePage ? nft.owner : nft.seller)}
                   </p>
                 </div>
               </div>
