@@ -1,6 +1,12 @@
 "use client";
 import Web3Modal from "web3modal";
-import { createContext, useContext, useEffect, useState } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useCallback,
+} from "react";
 import { ethers, BrowserProvider, Signer, Contract } from "ethers";
 import axios from "axios";
 import { marketAddress, marketABI } from "./constants";
@@ -52,9 +58,11 @@ export interface NFTContextType {
     id?: string
   ) => Promise<void>;
 }
+
 export const formatPrice = (price: bigint): string => {
   return ethers.formatUnits(price, "ether");
 };
+
 export const NFTContext = createContext<NFTContextType>({
   nftCurrency: "ETH",
   connectWallet: async () => {},
@@ -81,10 +89,33 @@ interface NFTProviderProps {
 export const NFTProvider: React.FC<NFTProviderProps> = ({ children }) => {
   const [currentAccount, setCurrentAccount] = useState<string>("");
   const nftCurrency = "ETH";
+  const [web3ModalRef, setWeb3ModalRef] = useState<Web3Modal | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const modal = new Web3Modal();
+      setWeb3ModalRef(modal);
+    }
+  }, []);
+
+  const handleAccountsChanged = useCallback((accounts: string[]) => {
+    if (accounts.length > 0) {
+      setCurrentAccount(accounts[0]);
+    } else {
+      setCurrentAccount("");
+    }
+  }, []);
+
+  const handleDisconnect = useCallback(() => {
+    setCurrentAccount("");
+    if (web3ModalRef) {
+      web3ModalRef.clearCachedProvider();
+    }
+  }, [web3ModalRef]);
 
   const checkIfWalletIsConnected = async (): Promise<void> => {
-    if (!window.ethereum) {
-      alert("Please install MetaMask");
+    if (typeof window === "undefined" || !window.ethereum) {
+      console.log("MetaMask not available");
       return;
     }
     try {
@@ -96,6 +127,9 @@ export const NFTProvider: React.FC<NFTProviderProps> = ({ children }) => {
       } else {
         console.log("No accounts found");
       }
+
+      window.ethereum.on("accountsChanged", handleAccountsChanged);
+      window.ethereum.on("disconnect", handleDisconnect);
     } catch (error) {
       console.error("Error checking wallet connection:", error);
     }
@@ -103,26 +137,56 @@ export const NFTProvider: React.FC<NFTProviderProps> = ({ children }) => {
 
   useEffect(() => {
     checkIfWalletIsConnected();
-  }, []);
+
+    return () => {
+      if (typeof window !== "undefined" && window.ethereum) {
+        window.ethereum.removeListener(
+          "accountsChanged",
+          handleAccountsChanged
+        );
+        window.ethereum.removeListener("disconnect", handleDisconnect);
+      }
+    };
+  }, [handleAccountsChanged, handleDisconnect]);
 
   const connectWallet = async (): Promise<void> => {
-    if (!window.ethereum) {
+    if (typeof window === "undefined" || !window.ethereum) {
       alert("Please install MetaMask");
       return;
     }
+    if (!web3ModalRef) {
+      console.log("Web3Modal not initialized yet");
+      return;
+    }
     try {
-      const accounts = await window.ethereum.request({
-        method: "eth_requestAccounts",
-      });
-      setCurrentAccount(accounts[0]);
-      window.location.reload();
+      const connection = await web3ModalRef.connect();
+      const provider = new BrowserProvider(connection);
+      const accounts = await provider.listAccounts();
+      if (accounts.length) {
+        setCurrentAccount(accounts[0].address);
+      }
     } catch (error) {
       console.error("Error connecting wallet:", error);
     }
   };
 
   const disconnectWallet = (): void => {
-    setCurrentAccount("");
+    try {
+      setCurrentAccount("");
+      if (web3ModalRef) {
+        web3ModalRef.clearCachedProvider();
+      }
+      if (typeof window !== "undefined" && window.ethereum) {
+        window.ethereum.removeListener(
+          "accountsChanged",
+          handleAccountsChanged
+        );
+        window.ethereum.removeListener("disconnect", handleDisconnect);
+      }
+      console.log("Wallet disconnected");
+    } catch (error) {
+      console.error("Error disconnecting wallet:", error);
+    }
   };
 
   const uploadToIPFS = async (file: File): Promise<string | null> => {
@@ -223,8 +287,10 @@ export const NFTProvider: React.FC<NFTProviderProps> = ({ children }) => {
     id?: string
   ): Promise<void> => {
     try {
-      const web3modal = new Web3Modal();
-      const connection = await web3modal.connect();
+      if (!web3ModalRef) {
+        throw new Error("Web3Modal not initialized");
+      }
+      const connection = await web3ModalRef.connect();
       const provider = new BrowserProvider(connection);
       const signer = await provider.getSigner();
       const price = ethers.parseUnits(formInputPrice, "ether");
@@ -256,6 +322,10 @@ export const NFTProvider: React.FC<NFTProviderProps> = ({ children }) => {
   };
 
   const fetchNFT = async (): Promise<NFT[]> => {
+    if (typeof window === "undefined" || !window.ethereum) {
+      console.log("Cannot fetch NFTs: MetaMask not available");
+      return [];
+    }
     const provider = new BrowserProvider(window.ethereum);
     const contract = fetchContract(provider);
     const data: MarketItem[] = await contract.fetchMarketItems();
@@ -289,9 +359,13 @@ export const NFTProvider: React.FC<NFTProviderProps> = ({ children }) => {
 
     return items;
   };
+
   const fetchMyNFTsOrListedNFTs = async (type: any) => {
-    const web3modal = new Web3Modal();
-    const connection = await web3modal.connect();
+    if (!web3ModalRef) {
+      console.log("Web3Modal not initialized");
+      return [];
+    }
+    const connection = await web3ModalRef.connect();
     const provider = new BrowserProvider(connection);
     const signer = await provider.getSigner();
     const contract = fetchContract(signer);
@@ -327,19 +401,22 @@ export const NFTProvider: React.FC<NFTProviderProps> = ({ children }) => {
     );
     return items;
   };
+
   const buyNft = async (nft: NFT): Promise<void> => {
-    const web3modal = new Web3Modal();
-    const connection = await web3modal.connect();
+    if (!web3ModalRef) {
+      throw new Error("Web3Modal not initialized");
+    }
+    const connection = await web3ModalRef.connect();
     const provider = new BrowserProvider(connection);
     const signer = await provider.getSigner();
     const contract = fetchContract(signer);
 
-    // No need to convert price here since it should already be in wei
     const transaction = await contract.createMarketSale(nft.tokenId, {
-      value: nft.price, // Directly use the price which should be in wei
+      value: nft.price,
     });
     await transaction.wait();
   };
+
   return (
     <NFTContext.Provider
       value={{
