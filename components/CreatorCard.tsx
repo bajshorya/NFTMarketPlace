@@ -1,16 +1,30 @@
 "use client";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useContext } from "react";
 import assets from "../assets";
+import { getCreators } from "@/utils/topCreators";
+import { NFT, NFTContext } from "@/context/NFTContext";
 
-const CreatorCard = () => {
+// Props interface for CreatorCard
+interface CreatorCardProps {
+  creator: { seller: string; sum: number };
+}
+
+const CreatorCard: React.FC<CreatorCardProps> = ({ creator }) => {
   const [creatorKey, setCreatorKey] = useState<keyof typeof assets>("creator1");
 
+  // Randomly select an avatar on mount
   useEffect(() => {
     const randomKey = `creator${
       Math.floor(Math.random() * 10) + 1
     }` as keyof typeof assets;
     setCreatorKey(randomKey);
   }, []);
+
+  // Shorten the seller address for display
+  const shortenAddress = (address: string): string => {
+    if (!address) return "";
+    return `${address.slice(0, 6)}...${address.slice(-4)}`;
+  };
 
   return (
     <div>
@@ -20,8 +34,12 @@ const CreatorCard = () => {
           alt="Creator Avatar"
           className="w-24 h-24 rounded-full mb-4"
         />
-        <h2 className="text-xl font-semibold">Creator Name</h2>
-        <p className="text-gray-400">Creator Bio</p>
+        <h2 className="text-xl font-semibold text-white">
+          {shortenAddress(creator.seller)}
+        </h2>
+        <p className="text-gray-400">
+          Total Sales: {creator.sum.toFixed(2)} ETH
+        </p>
         <button className="mt-4 px-6 py-2 bg-pink-700 text-white rounded-full hover:bg-pink-900 hover:cursor-pointer transition-colors duration-300">
           Follow
         </button>
@@ -31,23 +49,54 @@ const CreatorCard = () => {
 };
 
 const ScrollCard = () => {
-  const parentRef = useRef(null);
-  const scrollRef = useRef(null);
+  const parentRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [nfts, setNfts] = useState<NFT[]>([]);
+  const { fetchNFT } = useContext(NFTContext);
+
+  // Fetch NFTs on mount
+  useEffect(() => {
+    const loadNFTs = async () => {
+      try {
+        const items = await fetchNFT();
+        setNfts(items);
+        console.log("Fetched NFTs:", items);
+      } catch (error) {
+        console.error("Failed to fetch NFTs:", error);
+      }
+    };
+
+    loadNFTs();
+  }, [fetchNFT]);
+
+  // Compute topCreators whenever nfts changes
+  const topCreators = getCreators(nfts);
+
+  // Log topCreators for debugging
+  useEffect(() => {
+    console.log("Top Creators:", topCreators);
+  }, [topCreators]);
 
   return (
     <div>
-      <h1 className="font-bold text-2xl mx-4">Best Creators</h1>
+      <h1 className="font-bold text-2xl mx-4 text-white">Best Creators</h1>
       <div className="relative flex-1 max-w-full flex mt-3" ref={parentRef}>
-        <div
-          className="flex flex-row w-max overflow-x-scroll select-none no-scrollbar"
-          ref={scrollRef}
-        >
-          {[6, 2, 1, 3, 8, 9, 4, 5, 7, 10].map((creator, index) => (
-            <div key={index}>
-              <CreatorCard />
-            </div>
-          ))}
-        </div>
+        {topCreators.length === 0 ? (
+          <div className="w-full text-center text-gray-400 py-8">
+            No creators found
+          </div>
+        ) : (
+          <div
+            className="flex flex-row w-max overflow-x-scroll select-none no-scrollbar"
+            ref={scrollRef}
+          >
+            {topCreators.map((creator, index) => (
+              <div key={creator.seller}>
+                <CreatorCard creator={creator} />
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
