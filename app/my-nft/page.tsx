@@ -6,15 +6,22 @@ import { NFT, NFTContext } from "@/context/NFTContext";
 import Banner from "@/components/Banner";
 import assets from "../../assets";
 import Image from "next/image";
+import SearchBar from "@/components/SearchBar";
+
 const Page = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [nfts, setNfts] = useState<NFT[]>([]);
+  const [filteredNfts, setFilteredNfts] = useState<NFT[]>([]);
+  const [filter, setFilter] = useState<string>("recent");
+  const [searchQuery, setSearchQuery] = useState<string>("");
   const { fetchMyNFTsOrListedNFTs, currentAccount } = useContext(NFTContext);
 
+  // Fetch NFTs on mount
   useEffect(() => {
     fetchMyNFTsOrListedNFTs("")
       .then((items) => {
         setNfts(items);
+        setFilteredNfts(items);
         setIsLoading(false);
         console.log("My NFTs:", items);
       })
@@ -23,6 +30,45 @@ const Page = () => {
         setIsLoading(false);
       });
   }, [fetchMyNFTsOrListedNFTs]);
+
+  // Apply filter and search whenever nfts, filter, or searchQuery changes
+  useEffect(() => {
+    let updatedNfts = [...nfts];
+
+    // Apply search filter
+    if (searchQuery) {
+      updatedNfts = updatedNfts.filter(
+        (nft) =>
+          nft.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          nft.description.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    // Apply sort filter
+    switch (filter) {
+      case "price-desc":
+        updatedNfts.sort((a, b) => Number(b.price) - Number(a.price));
+        break;
+      case "price-asc":
+        updatedNfts.sort((a, b) => Number(a.price) - Number(b.price)); // Fixed sorting logic
+        break;
+      case "recent":
+      default:
+        // Assuming tokenId represents the order of creation (higher tokenId = more recent)
+        updatedNfts.sort((a, b) => Number(b.tokenId) - Number(a.tokenId));
+        break;
+    }
+
+    setFilteredNfts(updatedNfts);
+  }, [nfts, filter, searchQuery]);
+
+  const handleFilterChange = (selectedFilter: string) => {
+    setFilter(selectedFilter);
+  };
+
+  const handleSearchChange = (query: string) => {
+    setSearchQuery(query);
+  };
 
   if (isLoading) {
     return (
@@ -34,29 +80,29 @@ const Page = () => {
 
   return (
     <div className="min-h-screen px-4 sm:px-6 lg:px-8">
-      <div className="relative ">
+      <div className="relative">
         <Banner
           name="My NFT's"
           childStyles="rounded-sm"
-          parentStyles="h-20 min-h-[200px] rounded-3xl "
-        ></Banner>
-        <div className="flexCenter flex-col  z-0">
+          parentStyles="h-20 min-h-[200px] rounded-3xl"
+        />
+        <div className="flexCenter flex-col z-0">
           <div className="absolute transform rounded-full border-[#0a0a0a] border-4">
             <Image
               src={assets.creator1.src}
               alt="Creator"
-              className="rounded-full "
+              className="rounded-full"
               width={144}
               height={144}
             />
           </div>
         </div>
-        <p className=" flexCenter flex-col z-0 mt-20 font-extrabold text-2xl text-white ">
+        <p className="flexCenter flex-col z-0 mt-20 font-extrabold text-2xl text-white">
           {shortenAddress(currentAccount)}
         </p>
       </div>
-      {!isLoading && nfts.length === 0 ? (
-        <div className="flex items-center justify-center mt-30 border-2 border-dashed border-gray-600 ">
+      {!isLoading && filteredNfts.length === 0 ? (
+        <div className="flex items-center justify-center mt-30 border-2 border-dashed border-gray-600">
           <div className="font-extrabold text-4xl">No NFTs found</div>
         </div>
       ) : (
@@ -64,8 +110,12 @@ const Page = () => {
           <h2 className="font-poppins text-white text-3xl font-semibold mb-8 text-center">
             My NFTs
           </h2>
+          <SearchBar
+            onFilterChange={handleFilterChange}
+            onSearchChange={handleSearchChange}
+          />
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {nfts.map((nft) => (
+            {filteredNfts.map((nft) => (
               <div key={nft.tokenId} className="min-w-[250px]">
                 <NFTCard nft={nft} onProfilePage />
               </div>
