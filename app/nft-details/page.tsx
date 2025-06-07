@@ -118,7 +118,7 @@ const NftDetails = () => {
           });
           setIsLoading(false);
         } else {
-          fetchMyNFTsOrListedNFTs("")
+          fetchMyNFTsOrListedNFTs("fetchMyNFTs")
             .then((ownedNfts) => {
               const foundOwnedNft = ownedNfts.find(
                 (item) => item.tokenId === nftId
