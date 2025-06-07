@@ -1,5 +1,6 @@
 "use client";
 import Web3Modal from "web3modal";
+import WalletConnectProvider from "@walletconnect/web3-provider";
 import {
   createContext,
   useContext,
@@ -93,7 +94,17 @@ export const NFTProvider: React.FC<NFTProviderProps> = ({ children }) => {
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const modal = new Web3Modal();
+      const providerOptions = {
+        walletconnect: {
+          package: WalletConnectProvider,
+          options: {
+            rpc: {
+              11155111: "https://rpc.sepolia.org",
+            },
+          },
+        },
+      };
+      const modal = new Web3Modal({ providerOptions });
       setWeb3ModalRef(modal);
     }
   }, []);
@@ -115,9 +126,17 @@ export const NFTProvider: React.FC<NFTProviderProps> = ({ children }) => {
 
   const checkIfWalletIsConnected = async (): Promise<void> => {
     if (typeof window === "undefined" || !window.ethereum) {
+      console.error("MetaMask is not installed or not available");
+      alert("Please install MetaMask and connect to the Sepolia testnet");
       return;
     }
     try {
+      const chainId = await window.ethereum.request({ method: "eth_chainId" });
+      if (chainId !== "0xaa36a7") {
+        console.error("Please switch to the Sepolia testnet");
+        alert("Please switch to the Sepolia testnet in MetaMask");
+        return;
+      }
       const accounts = await window.ethereum.request({
         method: "eth_accounts",
       });
@@ -126,7 +145,6 @@ export const NFTProvider: React.FC<NFTProviderProps> = ({ children }) => {
       } else {
         console.log("No accounts found");
       }
-
       window.ethereum.on("accountsChanged", handleAccountsChanged);
       window.ethereum.on("disconnect", handleDisconnect);
     } catch (error) {
@@ -136,7 +154,6 @@ export const NFTProvider: React.FC<NFTProviderProps> = ({ children }) => {
 
   useEffect(() => {
     checkIfWalletIsConnected();
-
     return () => {
       if (typeof window !== "undefined" && window.ethereum) {
         window.ethereum.removeListener(
@@ -160,6 +177,11 @@ export const NFTProvider: React.FC<NFTProviderProps> = ({ children }) => {
     try {
       const connection = await web3ModalRef.connect();
       const provider = new BrowserProvider(connection);
+      const network = await provider.getNetwork();
+      if (network.chainId !== BigInt(11155111)) {
+        alert("Please switch to the Sepolia testnet in MetaMask");
+        return;
+      }
       const accounts = await provider.listAccounts();
       if (accounts.length) {
         setCurrentAccount(accounts[0].address);
@@ -192,21 +214,15 @@ export const NFTProvider: React.FC<NFTProviderProps> = ({ children }) => {
       const apiKey = process.env.NEXT_PUBLIC_PINATA_API_KEY;
       const apiSecret = process.env.NEXT_PUBLIC_PINATA_API_SECRET;
       if (!apiKey || !apiSecret) {
-        console.error(
-          "Pinata API Key or Secret is not set in environment variables"
-        );
+        console.error("Pinata API Key or Secret is not set");
         return null;
       }
-
       const formData = new FormData();
       formData.append("file", file);
-
       const pinataMetadata = JSON.stringify({ name: file.name });
       formData.append("pinataMetadata", pinataMetadata);
-
       const pinataOptions = JSON.stringify({ cidVersion: 0 });
       formData.append("pinataOptions", pinataOptions);
-
       const res = await axios.post(
         "https://api.pinata.cloud/pinning/pinFileToIPFS",
         formData,
@@ -218,9 +234,8 @@ export const NFTProvider: React.FC<NFTProviderProps> = ({ children }) => {
           },
         }
       );
-
-      const ipfsHash = res.data.IpfsHash;
-      return `https://ipfs.io/ipfs/${ipfsHash}`;
+      console.log("Pinata upload response:", res.data);
+      return `https://gateway.pinata.cloud/ipfs/${res.data.IpfsHash}`;
     } catch (error: any) {
       console.error("Error uploading to IPFS:", error);
       if (error.response) {
@@ -241,19 +256,14 @@ export const NFTProvider: React.FC<NFTProviderProps> = ({ children }) => {
       console.error("All fields are required");
       return;
     }
-
     const data = JSON.stringify({ name, description, image: fileUrl });
-
     try {
       const apiKey = process.env.NEXT_PUBLIC_PINATA_API_KEY;
       const apiSecret = process.env.NEXT_PUBLIC_PINATA_API_SECRET;
       if (!apiKey || !apiSecret) {
-        console.error(
-          "Pinata API Key or Secret is not set in environment variables"
-        );
+        console.error("Pinata API Key or Secret is not set");
         return;
       }
-
       const res = await axios.post(
         "https://api.pinata.cloud/pinning/pinJSONToIPFS",
         data,
@@ -265,8 +275,8 @@ export const NFTProvider: React.FC<NFTProviderProps> = ({ children }) => {
           },
         }
       );
-
-      const tokenURI = `https://ipfs.io/ipfs/${res.data.IpfsHash}`;
+      console.log("Pinata JSON upload response:", res.data);
+      const tokenURI = `https://gateway.pinata.cloud/ipfs/${res.data.IpfsHash}`;
       await createSale(tokenURI, price);
       router.push("/");
     } catch (error: any) {
@@ -291,10 +301,15 @@ export const NFTProvider: React.FC<NFTProviderProps> = ({ children }) => {
       const connection = await web3ModalRef.connect();
       const provider = new BrowserProvider(connection);
       const signer = await provider.getSigner();
+      const balance = await provider.getBalance(await signer.getAddress());
       const price = ethers.parseUnits(formInputPrice, "ether");
       const contract = fetchContract(signer);
-
       const listingPrice = await contract.getListingPrice();
+      if (balance < listingPrice + price) {
+        throw new Error(
+          "Insufficient Sepolia ETH for listing price and NFT price"
+        );
+      }
       const transaction = !isReselling
         ? await contract.createToken(url, price, {
             value: listingPrice.toString(),
@@ -302,16 +317,7 @@ export const NFTProvider: React.FC<NFTProviderProps> = ({ children }) => {
         : await contract.resellToken(id, price, {
             value: listingPrice.toString(),
           });
-
-
-      if (transaction.wait) {
-        await transaction.wait();
-      } else {
-        console.error("Transaction object does not have a wait method.");
-        throw new Error(
-          "Invalid transaction object returned from contract method."
-        );
-      }
+      await transaction.wait({ timeout: 60000 });
     } catch (error) {
       console.error("Error in createSale:", error);
       throw error;
@@ -325,7 +331,6 @@ export const NFTProvider: React.FC<NFTProviderProps> = ({ children }) => {
     const provider = new BrowserProvider(window.ethereum);
     const contract = fetchContract(provider);
     const data: MarketItem[] = await contract.fetchMarketItems();
-
     const items = await Promise.all(
       data.map(
         async ({
@@ -335,10 +340,13 @@ export const NFTProvider: React.FC<NFTProviderProps> = ({ children }) => {
           price: unformattedPrice,
         }: MarketItem) => {
           const tokenURI = await contract.tokenURI(tokenId);
+          console.log(`Fetching tokenURI for tokenId ${tokenId}:`, tokenURI);
           const {
             data: { image, name, description },
-          } = await axios.get(tokenURI);
-
+          } = await axios.get(tokenURI).catch((error) => {
+            console.error(`Failed to fetch tokenURI ${tokenURI}:`, error);
+            throw error;
+          });
           return {
             price: unformattedPrice,
             tokenId: tokenId.toString(),
@@ -352,7 +360,7 @@ export const NFTProvider: React.FC<NFTProviderProps> = ({ children }) => {
         }
       )
     );
-
+    console.log("Fetched NFTs:", items);
     return items;
   };
 
@@ -378,10 +386,13 @@ export const NFTProvider: React.FC<NFTProviderProps> = ({ children }) => {
           price: unformattedPrice,
         }: MarketItem) => {
           const tokenURI = await contract.tokenURI(tokenId);
+          console.log(`Fetching tokenURI for tokenId ${tokenId}:`, tokenURI);
           const {
             data: { image, name, description },
-          } = await axios.get(tokenURI);
-
+          } = await axios.get(tokenURI).catch((error) => {
+            console.error(`Failed to fetch tokenURI ${tokenURI}:`, error);
+            throw error;
+          });
           return {
             price: unformattedPrice,
             tokenId: tokenId.toString(),
@@ -395,6 +406,7 @@ export const NFTProvider: React.FC<NFTProviderProps> = ({ children }) => {
         }
       )
     );
+    console.log("Fetched NFTs:", items);
     return items;
   };
 
@@ -406,11 +418,10 @@ export const NFTProvider: React.FC<NFTProviderProps> = ({ children }) => {
     const provider = new BrowserProvider(connection);
     const signer = await provider.getSigner();
     const contract = fetchContract(signer);
-
     const transaction = await contract.createMarketSale(nft.tokenId, {
       value: nft.price,
     });
-    await transaction.wait();
+    await transaction.wait({ timeout: 60000 });
   };
 
   return (
