@@ -51,8 +51,7 @@ const ButtonGroup = ({
 
 const NavbarDemo = ({ className }: { className?: string }) => {
   const router = useRouter();
-  const [active, setActive] = useState<string | null>(null);
-
+  const [active, setActive] = useState<string | null>(null); // eslint-disable-line @typescript-eslint/no-unused-vars
   return (
     <div
       className={cn("fixed top-6 inset-x-0 max-w-5xl mx-auto z-50", className)}
