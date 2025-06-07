@@ -13,16 +13,6 @@ interface NFTCardProps {
   onProfilePage?: boolean;
 }
 
-interface NFT {
-  tokenId: string;
-  image?: string;
-  name?: string;
-  i?: number; // Added 'i' property to match usage
-  price?: string;
-  owner?: string;
-  seller?: string;
-}
-
 const NFTCard = ({ nft, onProfilePage = false }: NFTCardProps) => {
   const { nftCurrency } = useContext(NFTContext) as NFTContextType;
   const nftImage = nft.image || "../assets/nft10.jpeg";

@@ -72,7 +72,7 @@ const NavbarDemo = ({ className }: { className?: string }) => {
           href="/my-nft"
           className="flex items-center gap-2 text-lg font-bold"
         >
-          <div>My NFTs</div> {/* Fixed: Removed apostrophe */}
+          <div>My NFTs</div>
         </Link>
 
         <ButtonGroup setActive={setActive} router={router} />
@@ -81,4 +81,4 @@ const NavbarDemo = ({ className }: { className?: string }) => {
   );
 };
 
-export default NavbarDemo;
+export default NavbarDemo; // Only one export default

@@ -14,12 +14,12 @@ const transition = {
 
 export const MenuItem = ({
   setActive,
-  active,
+  _active,
   item,
   children,
 }: {
   setActive: (item: string) => void;
-  active: string | null;
+  _active: string | null;
   item: string;
   children?: React.ReactNode;
 }) => {
@@ -31,13 +31,13 @@ export const MenuItem = ({
       >
         {item}
       </motion.p>
-      {active !== null && (
+      {_active !== null && (
         <motion.div
           initial={{ opacity: 0, scale: 0.9, y: 8 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           transition={transition}
         >
-          {active === item && (
+          {_active === item && (
             <div className="absolute top-[calc(100%_+_0.8rem)] left-1/2 transform -translate-x-1/2 pt-2">
               <motion.div
                 transition={transition}
