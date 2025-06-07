@@ -370,7 +370,7 @@ export const NFTProvider: React.FC<NFTProviderProps> = ({ children }) => {
         : await contract.resellToken(id, price, {
             value: listingPrice.toString(),
           });
-      await transaction.wait({ timeout: 60000 });
+      await transaction.wait();
     } catch (error) {
       console.error("Error in createSale:", error);
       alert("Failed to create NFT. Check console for details.");
@@ -504,12 +504,12 @@ export const NFTProvider: React.FC<NFTProviderProps> = ({ children }) => {
     try {
       const connection = await web3ModalRef.connect();
       const provider = new BrowserProvider(connection);
-      const signer = await provider.getSigner();
-      const contract = fetchContract(signer);
+      const signer = await provider.getSigner(); // Get the signer from the provider
+      const contract = fetchContract(signer); // Use the signer to fetch the contract
       const transaction = await contract.createMarketSale(nft.tokenId, {
         value: nft.price,
       });
-      await transaction.wait({ timeout: 60000 });
+      await transaction.wait();
     } catch (error) {
       console.error("Error buying NFT:", error);
       alert("Failed to buy NFT. Check console for details.");
