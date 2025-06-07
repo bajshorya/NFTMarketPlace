@@ -1,6 +1,7 @@
 "use client";
 import React from "react";
 import { motion } from "motion/react";
+import Image from "next/image";
 
 const transition = {
   type: "spring",
@@ -85,7 +86,7 @@ export const ProductItem = ({
 }) => {
   return (
     <a href={href} className="flex items-start gap-2">
-      <img
+      <Image
         src={src}
         width={100}
         height={50}

@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef, useContext } from "react";
 import assets from "../assets";
 import { getCreators } from "@/utils/topCreators";
 import { NFT, NFTContext } from "@/context/NFTContext";
+import Image from "next/image";
 
 interface CreatorCardProps {
   creator: { seller: string; sum: number };
@@ -26,7 +27,7 @@ const CreatorCard: React.FC<CreatorCardProps> = ({ creator }) => {
   return (
     <div>
       <div className="flex flex-col items-center justify-center bg-slate-800 rounded-lg shadow-lg p-4 m-2 w-64 border-1">
-        <img
+        <Image
           src={assets[creatorKey]?.src || assets.creator1.src}
           alt="Creator Avatar"
           className="w-24 h-24 rounded-full mb-4"

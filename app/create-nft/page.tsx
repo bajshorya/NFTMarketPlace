@@ -12,6 +12,7 @@ import React, {
 import { useDropzone } from "react-dropzone";
 import { defaultStyles, FileIcon } from "react-file-icon";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 const CreateNFT = () => {
   const { nftCurrency, uploadToIPFS, createNFT } = useContext(NFTContext);
@@ -110,7 +111,7 @@ const CreateNFT = () => {
             )}
             {fileUrl && (
               <div className="mt-6">
-                <img
+                <Image
                   src={fileUrl}
                   alt="Preview"
                   className="w-full h-auto rounded-lg max-w-md mx-auto"
