@@ -99,7 +99,6 @@ const NftDetails = () => {
       return;
     }
 
-    // First, try to fetch from market listings
     fetchNFT()
       .then((marketNfts) => {
         const foundMarketNft = marketNfts.find(
@@ -119,7 +118,6 @@ const NftDetails = () => {
           });
           setIsLoading(false);
         } else {
-          // If not found in market listings, try fetching from owned NFTs
           fetchMyNFTsOrListedNFTs("")
             .then((ownedNfts) => {
               const foundOwnedNft = ownedNfts.find(

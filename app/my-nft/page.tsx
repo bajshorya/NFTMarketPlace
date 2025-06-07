@@ -30,8 +30,6 @@ const Page = () => {
 
   useEffect(() => {
     let updatedNfts = [...nfts];
-
-    // Apply search filter
     if (searchQuery) {
       updatedNfts = updatedNfts.filter(
         (nft) =>
@@ -45,7 +43,7 @@ const Page = () => {
         updatedNfts.sort((a, b) => Number(b.price) - Number(a.price));
         break;
       case "price-asc":
-        updatedNfts.sort((a, b) => Number(a.price) - Number(b.price)); // Fixed sorting logic
+        updatedNfts.sort((a, b) => Number(a.price) - Number(b.price)); 
         break;
       case "recent":
       default:

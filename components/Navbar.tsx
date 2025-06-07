@@ -1,15 +1,11 @@
 "use client";
 import React, { useState, useContext } from "react";
 import {
-  HoveredLink,
   Menu,
-  MenuItem,
-  ProductItem,
 } from "../components/ui/navbar-menu";
 import CustomButton from "./ui/CustomButton";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
-import icon from "../public/reshot-icon-beer-D3X8V2SQAP.svg";
 import { useRouter } from "next/navigation";
 import { NFTContext } from "@/context/NFTContext";
 

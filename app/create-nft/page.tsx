@@ -14,13 +14,7 @@ import { defaultStyles, FileIcon } from "react-file-icon";
 import { useRouter } from "next/navigation";
 
 const CreateNFT = () => {
-  const {
-    nftCurrency,
-    connectWallet,
-    currentAccount,
-    uploadToIPFS,
-    createNFT,
-  } = useContext(NFTContext);
+  const { nftCurrency, uploadToIPFS, createNFT } = useContext(NFTContext);
   const [fileUrl, setFileUrl] = useState<string | null>(null);
   const [formInput, setFormInput] = useState({
     name: "",
@@ -80,8 +74,7 @@ const CreateNFT = () => {
     [isDragActive, isDragAccept, isDragReject]
   );
 
-  useEffect(() => {
-  }, [formInput]);
+  useEffect(() => {}, [formInput]);
 
   return (
     <div className="py-5 px-4 sm:px-6 min-h-screen text-white">

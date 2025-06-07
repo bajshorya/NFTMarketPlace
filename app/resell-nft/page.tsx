@@ -5,7 +5,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import React, { useContext, useEffect, useState } from "react";
 import Loader from "./loading";
 import Banner from "@/components/Banner";
-import NFTCard from "@/components/NFTCard";
 import Input from "@/components/Input";
 import Image from "next/image";
 import CustomButton from "@/components/ui/CustomButton";
@@ -18,7 +17,7 @@ const page = () => {
   const router = useRouter();
   const [price, setPrice] = useState<string>("");
   const [image, setImage] = useState<string>("");
-  const [isLoading, setIsLoading] = useState<boolean>(true); // Set initial loading state to true
+  const [isLoading, setIsLoading] = useState<boolean>(true); 
 
   const fetchNFT = async () => {
     if (!tokenURI) {
@@ -37,7 +36,7 @@ const page = () => {
   };
 
   useEffect(() => {
-    fetchNFT(); // Always call fetchNFT on mount if tokenURI exists
+    fetchNFT(); 
   }, [tokenURI]);
   const resell = async ({
     tokenURI,
