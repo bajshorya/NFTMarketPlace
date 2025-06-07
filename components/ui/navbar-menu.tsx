@@ -104,14 +104,3 @@ export const ProductItem = ({
     </a>
   );
 };
-
-export const HoveredLink = ({ children, ...rest }: any) => {
-  return (
-    <a
-      {...rest}
-      className="text-neutral-600 dark:text-neutral-200 hover:text-black dark:hover:text-white text-sm font-medium px-2 py-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-200"
-    >
-      {children}
-    </a>
-  );
-};

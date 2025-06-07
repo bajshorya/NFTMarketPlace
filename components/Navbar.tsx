@@ -1,8 +1,6 @@
 "use client";
 import React, { useState, useContext } from "react";
-import {
-  Menu,
-} from "../components/ui/navbar-menu";
+import { Menu } from "../components/ui/navbar-menu";
 import CustomButton from "./ui/CustomButton";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
@@ -13,7 +11,7 @@ const ButtonGroup = ({
   setActive,
   router,
 }: {
-  setActive: any;
+  setActive: (active: string | null) => void;
   router: ReturnType<typeof useRouter>;
 }) => {
   const { connectWallet, currentAccount, disconnectWallet } = useContext(
@@ -23,7 +21,6 @@ const ButtonGroup = ({
     currentAccount: string | null;
     disconnectWallet: () => void;
   };
-  const hasConnectedWallet = true;
 
   return currentAccount ? (
     <div className="flex items-center gap-3">
@@ -55,6 +52,7 @@ const ButtonGroup = ({
 const NavbarDemo = ({ className }: { className?: string }) => {
   const router = useRouter();
   const [active, setActive] = useState<string | null>(null);
+
   return (
     <div
       className={cn("fixed top-6 inset-x-0 max-w-5xl mx-auto z-50", className)}
@@ -74,7 +72,7 @@ const NavbarDemo = ({ className }: { className?: string }) => {
           href="/my-nft"
           className="flex items-center gap-2 text-lg font-bold"
         >
-          <div>My NFT's</div>
+          <div>My NFTs</div> {/* Fixed: Removed apostrophe */}
         </Link>
 
         <ButtonGroup setActive={setActive} router={router} />
