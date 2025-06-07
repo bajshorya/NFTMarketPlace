@@ -72,7 +72,7 @@ const NftDetails = () => {
   const nftId = searchParams.get("id");
   const [paymentModal, setPaymentModal] = useState(false);
   const router = useRouter();
- 
+
   const checkout = async () => {
     if (!buyNft) {
       console.error("buyNft function is not available");
@@ -137,8 +137,6 @@ const NftDetails = () => {
                   seller: foundOwnedNft.seller,
                   tokenURI: foundOwnedNft.tokenURI,
                 });
-              } else {
-                console.log("NFT not found for ID:", nftId);
               }
               setIsLoading(false);
             })

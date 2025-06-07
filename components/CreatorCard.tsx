@@ -4,7 +4,6 @@ import assets from "../assets";
 import { getCreators } from "@/utils/topCreators";
 import { NFT, NFTContext } from "@/context/NFTContext";
 
-// Props interface for CreatorCard
 interface CreatorCardProps {
   creator: { seller: string; sum: number };
 }
@@ -12,7 +11,6 @@ interface CreatorCardProps {
 const CreatorCard: React.FC<CreatorCardProps> = ({ creator }) => {
   const [creatorKey, setCreatorKey] = useState<keyof typeof assets>("creator1");
 
-  // Randomly select an avatar on mount
   useEffect(() => {
     const randomKey = `creator${
       Math.floor(Math.random() * 10) + 1
@@ -20,7 +18,6 @@ const CreatorCard: React.FC<CreatorCardProps> = ({ creator }) => {
     setCreatorKey(randomKey);
   }, []);
 
-  // Shorten the seller address for display
   const shortenAddress = (address: string): string => {
     if (!address) return "";
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
@@ -54,13 +51,11 @@ const ScrollCard = () => {
   const [nfts, setNfts] = useState<NFT[]>([]);
   const { fetchNFT } = useContext(NFTContext);
 
-  // Fetch NFTs on mount
   useEffect(() => {
     const loadNFTs = async () => {
       try {
         const items = await fetchNFT();
         setNfts(items);
-        console.log("Fetched NFTs:", items);
       } catch (error) {
         console.error("Failed to fetch NFTs:", error);
       }
@@ -69,13 +64,7 @@ const ScrollCard = () => {
     loadNFTs();
   }, [fetchNFT]);
 
-  // Compute topCreators whenever nfts changes
   const topCreators = getCreators(nfts);
-
-  // Log topCreators for debugging
-  useEffect(() => {
-    console.log("Top Creators:", topCreators);
-  }, [topCreators]);
 
   return (
     <div>

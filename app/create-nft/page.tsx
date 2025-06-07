@@ -81,7 +81,6 @@ const CreateNFT = () => {
   );
 
   useEffect(() => {
-    console.log(formInput);
   }, [formInput]);
 
   return (

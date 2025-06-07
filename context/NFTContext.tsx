@@ -115,7 +115,6 @@ export const NFTProvider: React.FC<NFTProviderProps> = ({ children }) => {
 
   const checkIfWalletIsConnected = async (): Promise<void> => {
     if (typeof window === "undefined" || !window.ethereum) {
-      console.log("MetaMask not available");
       return;
     }
     try {
@@ -183,7 +182,6 @@ export const NFTProvider: React.FC<NFTProviderProps> = ({ children }) => {
         );
         window.ethereum.removeListener("disconnect", handleDisconnect);
       }
-      console.log("Wallet disconnected");
     } catch (error) {
       console.error("Error disconnecting wallet:", error);
     }
@@ -305,7 +303,6 @@ export const NFTProvider: React.FC<NFTProviderProps> = ({ children }) => {
             value: listingPrice.toString(),
           });
 
-      console.log("Transaction object:", transaction);
 
       if (transaction.wait) {
         await transaction.wait();
@@ -323,7 +320,6 @@ export const NFTProvider: React.FC<NFTProviderProps> = ({ children }) => {
 
   const fetchNFT = async (): Promise<NFT[]> => {
     if (typeof window === "undefined" || !window.ethereum) {
-      console.log("Cannot fetch NFTs: MetaMask not available");
       return [];
     }
     const provider = new BrowserProvider(window.ethereum);

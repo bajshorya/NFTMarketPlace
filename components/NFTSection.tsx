@@ -13,7 +13,6 @@ const NFTSection = () => {
       try {
         const items = await fetchNFT();
         setNfts(items);
-        console.log("Fetched NFTs:", items);
       } catch (error) {
         console.error("Failed to fetch NFTs:", error);
       }

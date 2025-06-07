@@ -24,7 +24,6 @@ const HotBids = () => {
         const items = await fetchNFT();
         setNfts(items);
         setFilteredNfts(items);
-        console.log("Hot Bids NFTs:", items);
       } catch (error) {
         console.error("Failed to fetch Hot Bids NFTs:", error);
       }
@@ -33,11 +32,9 @@ const HotBids = () => {
     loadNFTs();
   }, [fetchNFT]);
 
-  // Apply filter and search whenever nfts, selectedFilter, or searchQuery changes
   useEffect(() => {
     let updatedNfts = [...nfts];
 
-    // Apply search filter
     if (searchQuery) {
       updatedNfts = updatedNfts.filter(
         (nft) =>
@@ -46,7 +43,6 @@ const HotBids = () => {
       );
     }
 
-    // Apply sort filter
     switch (selectedFilter) {
       case "Price: High to Low":
         updatedNfts.sort((a, b) => Number(b.price) - Number(a.price));
@@ -57,15 +53,7 @@ const HotBids = () => {
       case "Newest Listings":
         updatedNfts.sort((a, b) => Number(b.tokenId) - Number(a.tokenId));
         break;
-      case "Ending Soonest":
-      case "Most Popular":
-      case "Verified Only":
-        // These filters require additional data (e.g., auction end time, popularity metrics, verification status)
-        // For now, we'll leave them as no-ops; you can implement them later
-        console.log(`Filter "${selectedFilter}" not implemented yet`);
-        break;
       default:
-        // Default to "Newest Listings" if no filter is selected
         updatedNfts.sort((a, b) => Number(b.tokenId) - Number(a.tokenId));
         break;
     }

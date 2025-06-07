@@ -56,7 +56,6 @@ const page = () => {
     }
     try {
       await createSale(tokenURI, price, isReselling, tokenId);
-      console.log("NFT resold successfully" + tokenId);
       router.push("/listed-nft");
     } catch (error) {
       console.error("Failed to resell NFT:", error);

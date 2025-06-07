@@ -16,22 +16,18 @@ const Page = () => {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const { fetchMyNFTsOrListedNFTs, currentAccount } = useContext(NFTContext);
 
-  // Fetch NFTs on mount
   useEffect(() => {
     fetchMyNFTsOrListedNFTs("")
       .then((items) => {
         setNfts(items);
         setFilteredNfts(items);
         setIsLoading(false);
-        console.log("My NFTs:", items);
       })
       .catch((error) => {
-        console.error("Failed to fetch MY NFTs:", error);
         setIsLoading(false);
       });
   }, [fetchMyNFTsOrListedNFTs]);
 
-  // Apply filter and search whenever nfts, filter, or searchQuery changes
   useEffect(() => {
     let updatedNfts = [...nfts];
 
@@ -44,7 +40,6 @@ const Page = () => {
       );
     }
 
-    // Apply sort filter
     switch (filter) {
       case "price-desc":
         updatedNfts.sort((a, b) => Number(b.price) - Number(a.price));
@@ -54,7 +49,6 @@ const Page = () => {
         break;
       case "recent":
       default:
-        // Assuming tokenId represents the order of creation (higher tokenId = more recent)
         updatedNfts.sort((a, b) => Number(b.tokenId) - Number(a.tokenId));
         break;
     }
