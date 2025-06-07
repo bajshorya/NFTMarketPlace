@@ -1,13 +1,11 @@
 import Banner from "@/components/Banner";
 import ScrollCard from "@/components/CreatorCard";
 import HotBids from "@/components/HotBids";
-import NFTSection from "@/components/NFTSection";
 
 export default function Home() {
   return (
     <div className="px-10">
       <div>
-        {" "}
         <div className="w-full">
           <Banner
             name="Discover Digital Art"
@@ -20,9 +18,6 @@ export default function Home() {
         </div>
         <div className="max-w-7xl mx-auto py-12">
           <HotBids />
-        </div>
-        <div>
-          <NFTSection />
         </div>
       </div>
     </div>
