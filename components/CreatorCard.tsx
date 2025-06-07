@@ -31,6 +31,8 @@ const CreatorCard: React.FC<CreatorCardProps> = ({ creator }) => {
           src={assets[creatorKey]?.src || assets.creator1.src}
           alt="Creator Avatar"
           className="w-24 h-24 rounded-full mb-4"
+          width={96}
+          height={96}
         />
         <h2 className="text-xl font-semibold text-white">
           {shortenAddress(creator.seller)}
