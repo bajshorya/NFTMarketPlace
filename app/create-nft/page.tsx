@@ -115,6 +115,8 @@ const CreateNFT = () => {
                   src={fileUrl}
                   alt="Preview"
                   className="w-full h-auto rounded-lg max-w-md mx-auto"
+                  width={500}
+                  height={500}
                 />
               </div>
             )}
