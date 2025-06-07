@@ -50,7 +50,7 @@ export interface NFTContextType {
     router: ReturnType<typeof useRouter>
   ) => Promise<void>;
   fetchNFT: () => Promise<NFT[]>;
-  fetchMyNFTsOrListedNFTs: (type: any) => Promise<NFT[]>;
+  fetchMyNFTsOrListedNFTs: (type: "fetchItemsListed" | "fetchMyNFTs") => Promise<NFT[]>;
   buyNft?: (nft: NFT) => Promise<void>;
   createSale: (
     url: string,
@@ -346,6 +346,10 @@ export const NFTProvider: React.FC<NFTProviderProps> = ({ children }) => {
       if (!web3ModalRef) {
         throw new Error("Web3Modal not initialized");
       }
+      // Validate formInputPrice
+      if (!formInputPrice || isNaN(Number(formInputPrice)) || Number(formInputPrice) <= 0) {
+        throw new Error("Price must be a positive number");
+      }
       const connection = await web3ModalRef.connect();
       const provider = new BrowserProvider(connection);
       const signer = await provider.getSigner();
@@ -353,27 +357,25 @@ export const NFTProvider: React.FC<NFTProviderProps> = ({ children }) => {
       const price = ethers.parseUnits(formInputPrice, "ether");
       const contract = fetchContract(signer);
       const listingPrice = await contract.getListingPrice();
-      if (balance < listingPrice + price) {
+      if (balance < listingPrice) {
         alert(
           `Insufficient Sepolia ETH. You need at least ${ethers.formatEther(
-            listingPrice + price
-          )} ETH. Please fund your wallet using a Sepolia faucet.`
+            listingPrice
+          )} ETH for the listing fee. Please fund your wallet using a Sepolia faucet.`
         );
-        throw new Error(
-          "Insufficient Sepolia ETH for listing price and NFT price"
-        );
+        throw new Error("Insufficient Sepolia ETH for listing price");
       }
-      const transaction = !isReselling
-        ? await contract.createToken(url, price, {
+      const transaction = isReselling
+        ? await contract.resellToken(id, price, {
             value: listingPrice.toString(),
           })
-        : await contract.resellToken(id, price, {
+        : await contract.createToken(url, price, {
             value: listingPrice.toString(),
           });
-      await transaction.wait();
-    } catch (error) {
+      await transaction.wait({ timeout: 120000 }); // Increased timeout to 2 minutes
+    } catch (error: any) {
       console.error("Error in createSale:", error);
-      alert("Failed to create NFT. Check console for details.");
+      alert(`Failed to ${isReselling ? "resell" : "create"} NFT: ${error.message || "Check console for details"}`);
       throw error;
     }
   };
@@ -397,6 +399,9 @@ export const NFTProvider: React.FC<NFTProviderProps> = ({ children }) => {
             price: unformattedPrice,
           }: MarketItem) => {
             try {
+              // Check if token exists before fetching tokenURI
+              const tokenOwner = await contract.ownerOf(tokenId).catch(() => null);
+              if (!tokenOwner) return null;
               const tokenURI = await contract.tokenURI(tokenId);
               console.log(
                 `Fetching tokenURI for tokenId ${tokenId}:`,
@@ -435,7 +440,9 @@ export const NFTProvider: React.FC<NFTProviderProps> = ({ children }) => {
     }
   };
 
-  const fetchMyNFTsOrListedNFTs = async (type: any) => {
+  const fetchMyNFTsOrListedNFTs = async (
+    type: "fetchItemsListed" | "fetchMyNFTs"
+  ): Promise<NFT[]> => {
     if (!web3ModalRef) {
       console.log("Web3Modal not initialized");
       return [];
@@ -459,6 +466,9 @@ export const NFTProvider: React.FC<NFTProviderProps> = ({ children }) => {
             price: unformattedPrice,
           }: MarketItem) => {
             try {
+              // Check if token exists before fetching tokenURI
+              const tokenOwner = await contract.ownerOf(tokenId).catch(() => null);
+              if (!tokenOwner) return null;
               const tokenURI = await contract.tokenURI(tokenId);
               console.log(
                 `Fetching tokenURI for tokenId ${tokenId}:`,
@@ -490,7 +500,7 @@ export const NFTProvider: React.FC<NFTProviderProps> = ({ children }) => {
       const filteredItems = items.filter((item): item is NFT => item !== null);
       console.log(`Fetched ${type} NFTs:`, filteredItems);
       return filteredItems;
-    } catch (error) {
+    } catch (error: any) {
       console.error(`Error fetching ${type} NFTs:`, error);
       alert(`Failed to fetch ${type} NFTs. Check console for details.`);
       return [];
@@ -504,13 +514,13 @@ export const NFTProvider: React.FC<NFTProviderProps> = ({ children }) => {
     try {
       const connection = await web3ModalRef.connect();
       const provider = new BrowserProvider(connection);
-      const signer = await provider.getSigner(); // Get the signer from the provider
-      const contract = fetchContract(signer); // Use the signer to fetch the contract
+      const signer = await provider.getSigner();
+      const contract = fetchContract(signer);
       const transaction = await contract.createMarketSale(nft.tokenId, {
         value: nft.price,
       });
-      await transaction.wait();
-    } catch (error) {
+      await transaction.wait({ timeout: 120000 }); // Increased timeout to 2 minutes
+    } catch (error: any) {
       console.error("Error buying NFT:", error);
       alert("Failed to buy NFT. Check console for details.");
       throw error;
