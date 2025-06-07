@@ -82,7 +82,7 @@ const ScrollCard = () => {
             className="flex flex-row w-max overflow-x-scroll select-none no-scrollbar"
             ref={scrollRef}
           >
-            {topCreators.map((creator, index) => (
+            {topCreators.map((creator) => (
               <div key={creator.seller}>
                 <CreatorCard creator={creator} />
               </div>

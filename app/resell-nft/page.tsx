@@ -2,14 +2,14 @@
 import { NFTContext } from "@/context/NFTContext";
 import axios from "axios";
 import { useRouter, useSearchParams } from "next/navigation";
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useState, useCallback } from "react";
 import Loader from "./loading";
 import Banner from "@/components/Banner";
 import Input from "@/components/Input";
 import Image from "next/image";
 import CustomButton from "@/components/ui/CustomButton";
 
-const page = () => {
+const ResellNFT = () => {
   const { createSale } = useContext(NFTContext);
   const searchParams = useSearchParams();
   const tokenId = searchParams.get("id");
@@ -17,9 +17,9 @@ const page = () => {
   const router = useRouter();
   const [price, setPrice] = useState<string>("");
   const [image, setImage] = useState<string>("");
-  const [isLoading, setIsLoading] = useState<boolean>(true); 
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  const fetchNFT = async () => {
+  const fetchNFT = useCallback(async () => {
     if (!tokenURI) {
       setIsLoading(false);
       return;
@@ -33,11 +33,12 @@ const page = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [tokenURI]);
 
   useEffect(() => {
-    fetchNFT(); 
-  }, [tokenURI]);
+    fetchNFT();
+  }, [fetchNFT, tokenURI]);
+
   const resell = async ({
     tokenURI,
     price,
@@ -60,6 +61,7 @@ const page = () => {
       console.error("Failed to resell NFT:", error);
     }
   };
+
   if (isLoading) {
     return (
       <div className="text-white text-lg">
@@ -116,4 +118,4 @@ const page = () => {
   );
 };
 
-export default page;
+export default ResellNFT;

@@ -25,6 +25,7 @@ const Page = () => {
       })
       .catch((error) => {
         setIsLoading(false);
+        console.error("Error fetching NFTs:", error);
       });
   }, [fetchMyNFTsOrListedNFTs]);
 
@@ -43,7 +44,7 @@ const Page = () => {
         updatedNfts.sort((a, b) => Number(b.price) - Number(a.price));
         break;
       case "price-asc":
-        updatedNfts.sort((a, b) => Number(a.price) - Number(b.price)); 
+        updatedNfts.sort((a, b) => Number(a.price) - Number(b.price));
         break;
       case "recent":
       default:
