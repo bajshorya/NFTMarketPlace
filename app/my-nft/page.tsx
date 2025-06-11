@@ -17,7 +17,7 @@ const Page = () => {
   const { fetchMyNFTsOrListedNFTs, currentAccount } = useContext(NFTContext);
 
   useEffect(() => {
-    fetchMyNFTsOrListedNFTs("")
+    fetchMyNFTsOrListedNFTs("fetchMyNFTs")
       .then((items) => {
         setNfts(items);
         setFilteredNfts(items);
