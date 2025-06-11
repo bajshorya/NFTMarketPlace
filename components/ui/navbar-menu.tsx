@@ -23,7 +23,6 @@ export const MenuItem = ({
   item: string;
   children?: React.ReactNode;
 }) => {
-  
   return (
     <div onMouseEnter={() => setActive(item)} className="relative">
       <motion.p
