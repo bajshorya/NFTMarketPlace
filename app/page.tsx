@@ -1,8 +1,8 @@
 "use client";
-import Banner from "@/components/Banner";
+// import Banner from "@/components/Banner";
 import ScrollCard from "@/components/CreatorCard";
 import HotBids from "@/components/HotBids";
-import AdSpaceProvider from "adspace-provider";
+// import AdSpaceProvider from "adspace-provider";
 export default function Home() {
   return (
     <div className="px-10">
