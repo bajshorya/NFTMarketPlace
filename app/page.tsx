@@ -10,7 +10,6 @@ export default function Home() {
           <div>
             <AdSpaceProvider
               tokenId={1}
-              contractAddress="0xd9A04562B2ea577007097B013e625F0CB2Fbf83A"
             />
           </div>
         </div>
